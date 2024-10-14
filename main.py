@@ -19,12 +19,12 @@ class MyGameApp(App):
         self.grid_buttons = []
 
     def create_top_layout(self):
-        top_layout = BoxLayout(orientation='horizontal', size_hint_y=0.1, padding=[10, 10, 10, 10])
-        reset_button = Button(background_normal='icons/restart.png', size_hint=(0.10, 1))
-        save_exit_button = Button(background_normal='icons/savexit.png', size_hint=(0.10, 1))
+        top_layout = BoxLayout(orientation='horizontal', size_hint_y=0.1, padding=[10, 10, 10, 10], spacing=20)
+        reset_button = Button(background_normal='icons/restart.png', size_hint=(0.1, 1))
+        save_exit_button = Button(background_normal='icons/savexit.png', size_hint=(0.1, 1))
         self.score_label = Label(text='0000', size_hint=(0.25, 1))
         self.update_font_size(self.score_label)
-        score_button = Button(background_normal='icons/score.png', size_hint=(0.10, 1))
+        score_button = Button(background_normal='icons/score.png', size_hint=(0.1, 1))
         score_button.bind(on_press=self.increase_score)     
         top_layout.add_widget(reset_button)
         top_layout.add_widget(save_exit_button)
