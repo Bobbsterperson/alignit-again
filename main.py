@@ -7,6 +7,7 @@ from kivy.uix.button import Button
 import random
 from kivy.uix.image import Image
 from kivy.uix.relativelayout import RelativeLayout
+from kivy.clock import Clock
 
 COLOR_BUTTONS = ['icons/blue.png', 'icons/green.png', 'icons/orange.png', 'icons/pink.png', 'icons/purple.png', 'icons/turquoise.png', 'icons/yellow.png']
 BACKGR = 'icons/background.png'
@@ -18,9 +19,11 @@ class MyGameApp(App):
         self.selected_button = None
         self.grid_buttons = []
         self.grid_state = [[0 for _ in range(9)] for _ in range(9)]
+        self.colored_button_pos_flag = False
+        self.but_pos = []
 
     def create_top_layout(self):
-        top_layout = BoxLayout(orientation='horizontal', size_hint_y=0.1, padding=[10, 10, 10, 10], spacing=20)
+        top_layout = BoxLayout(orientation='horizontal', size_hint_y=0.09, padding=[10, 10, 10, 10], spacing=20)
         reset_button = Button(background_normal='icons/restart.png', size_hint=(0.1, 1))
         save_exit_button = Button(background_normal='icons/savexit.png', size_hint=(0.1, 1))
         self.score_label = Label(text='0000', size_hint=(0.25, 1))
@@ -33,7 +36,7 @@ class MyGameApp(App):
         top_layout.add_widget(score_button) 
         return top_layout
 
-    def create_grids_layout(self):
+    def create_the_layouts(self):
         color_buttons_layout = self.create_color_buttons_layout()
         grid_layout = self.create_grid_layout()
         color_grid_layout = BoxLayout(orientation='vertical', size_hint=(1, 0.6))
@@ -63,19 +66,38 @@ class MyGameApp(App):
         return grid_layout
     
     def on_button_click(self, button):
-        if self.selected_button:
-            if self.selected_button.background_normal in COLOR_BUTTONS:
-                self.selected_button.background_color = [1, 1, 1, 1]
-            else:
-                self.selected_button.background_color = [0, 0, 0, 0.5]
-        self.selected_button = button
-        if self.selected_button.background_normal in COLOR_BUTTONS:
-            self.selected_button.background_color = [1.5, 1.5, 1.5, 1]
+        if self.selected_button and self.selected_button.background_normal in COLOR_BUTTONS:
+            self.move_colored_button_to_empty(button)
         else:
-            self.selected_button.background_color = [1, 1, 1, 0.5]
-        self.assign_random_colors_to_buttons()
+            self.select_colored_button(button)
         self.space_info()
-        
+
+    def select_colored_button(self, button):
+        if button.background_normal in COLOR_BUTTONS:
+            self.selected_button = button
+            self.colored_button_pos_flag = True
+            self.but_pos = [button.row, button.col]
+            button.background_color = [1.5, 1.5, 1.5, 1]
+        else:
+            self.selected_button = None
+            self.colored_button_pos_flag = False
+
+    def move_colored_button_to_empty(self, button):
+        if button.background_normal not in COLOR_BUTTONS and self.colored_button_pos_flag:
+            button.background_normal = self.selected_button.background_normal
+            button.background_color = [1, 1, 1, 1]
+            self.reset_button_state(self.selected_button)
+            self.grid_state[self.but_pos[0]][self.but_pos[1]] = 0
+            self.grid_state[button.row][button.col] = 1
+            self.selected_button = None
+            self.colored_button_pos_flag = False
+            self.but_pos = []
+
+    def reset_button_state(self, button):
+        button.background_normal = ''
+        button.background_color = [0, 0, 0, 0.5]
+        self.assign_random_colors_to_buttons()
+
     def space_info(self):
         spaces = 0
         for i in self.grid_state:
@@ -122,7 +144,7 @@ class MyGameApp(App):
         parent.add_widget(Image(source=BACKGR, fit_mode='cover'))
         main_layout = BoxLayout(orientation='vertical')    
         top_layout = self.create_top_layout()
-        color_grid_layout = self.create_grids_layout() 
+        color_grid_layout = self.create_the_layouts() 
         main_layout.add_widget(top_layout)
         main_layout.add_widget(BoxLayout(size_hint_y=0.1))
         main_layout.add_widget(color_grid_layout)
