@@ -17,6 +17,7 @@ class MyGameApp(App):
         self.score = 0
         self.selected_button = None
         self.grid_buttons = []
+        self.grid_state = [[0 for _ in range(9)] for _ in range(9)]
 
     def create_top_layout(self):
         top_layout = BoxLayout(orientation='horizontal', size_hint_y=0.1, padding=[10, 10, 10, 10], spacing=20)
@@ -54,6 +55,8 @@ class MyGameApp(App):
             for col in range(9):
                 button = Button(size_hint=(1, 1))
                 button.background_color = [0, 0, 0, 0.5]
+                button.row = row
+                button.col = col
                 grid_layout.add_widget(button)
                 self.grid_buttons.append(button)
                 button.bind(on_press=self.on_button_click)
@@ -71,14 +74,36 @@ class MyGameApp(App):
         else:
             self.selected_button.background_color = [1, 1, 1, 0.5]
         self.assign_random_colors_to_buttons()
+        self.space_info()
+        
+    def space_info(self):
+        spaces = 0
+        for i in self.grid_state:
+            for j in i:
+                if j == 0:
+                    spaces += 1
+        print(spaces)
+        for row in self.grid_state:
+            print(row)
+        print("============================")
+        
+    def check_for_free_pos(self):
+        return [
+            button
+            for button in self.grid_buttons
+            if self.grid_state[button.row][button.col] == 0
+        ]
 
     def assign_random_colors_to_buttons(self):
-        selected_buttons = random.sample(self.grid_buttons, 3)
-        selected_colors = random.sample(COLOR_BUTTONS, 3)
-        for button, color in zip(selected_buttons, selected_colors):
-            button.background_normal = color
-            button.background_down = color
-            button.background_color = [1, 1, 1, 1]      
+        available_buttons = self.check_for_free_pos()
+        if len(available_buttons) >= 3:
+            selected_buttons = random.sample(available_buttons, 3)
+            selected_colors = random.sample(COLOR_BUTTONS, 3)
+            for button, color in zip(selected_buttons, selected_colors):
+                button.background_normal = color
+                button.background_down = color
+                button.background_color = [1, 1, 1, 1]
+                self.grid_state[button.row][button.col] = 1
 
     def increase_score(self, instance):
         self.score += 1
