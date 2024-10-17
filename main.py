@@ -8,6 +8,7 @@ import random
 from kivy.uix.image import Image
 from kivy.uix.relativelayout import RelativeLayout
 from kivy.clock import Clock
+from astar import astar
 
 COLOR_BUTTONS = ['icons/blue.png', 'icons/green.png', 'icons/orange.png', 'icons/pink.png', 'icons/purple.png', 'icons/turquoise.png', 'icons/yellow.png']
 BACKGR = 'icons/background.png'
@@ -68,19 +69,23 @@ class MyGameApp(App):
                 button.bind(on_press=self.on_button_click)
         return grid_layout
     
-
-
-    
     def on_button_click(self, button):
         if self.selected_button and self.selected_button.background_normal in COLOR_BUTTONS:
             if self.grid_state[button.row][button.col] == 0:
-                self.move_color_to_normal_button(self.selected_button, button)
-                self.selected_button = None
-                self.assign_random_colors_to_buttons()
-                self.space_info()
+                start = (self.selected_button.row, self.selected_button.col)
+                end = (button.row, button.col)
+                path = astar(self.grid_state, start, end)
+                if path:
+                    self.move_color_to_normal_button(self.selected_button, button)
+                    self.selected_button = None
+                    self.assign_random_colors_to_buttons()
+                    self.space_info()
+                else:
+                    print("No free path")
                 return
             else:
                 self.selected_button.background_color = [1, 1, 1, 1]
+        
         self.selected_button = button
         if self.selected_button.background_normal in COLOR_BUTTONS:
             self.selected_button.background_color = [1.5, 1.5, 1.5, 1]
@@ -89,9 +94,6 @@ class MyGameApp(App):
             self.selected_button.background_color = [0, 0, 0, 0.5]
             self.colored_button_pos_flag = False
         print(self.colored_button_pos_flag)
-
-        
-
 
     def move_color_to_normal_button(self, colored_button, normal_button):
         normal_button.background_normal = colored_button.background_normal
@@ -102,7 +104,6 @@ class MyGameApp(App):
         colored_button.background_down = ''
         colored_button.background_color = [0, 0, 0, 0.5]
         self.grid_state[colored_button.row][colored_button.col] = 0
-
 
     def space_info(self):
         spaces = 0
