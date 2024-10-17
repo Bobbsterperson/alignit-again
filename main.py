@@ -25,7 +25,9 @@ class MyGameApp(App):
     def create_top_layout(self):
         top_layout = BoxLayout(orientation='horizontal', size_hint_y=0.09, padding=[10, 10, 10, 10], spacing=20)
         reset_button = Button(background_normal='icons/restart.png', size_hint=(0.1, 1))
+        reset_button.bind(on_press=self.reset_game)
         save_exit_button = Button(background_normal='icons/savexit.png', size_hint=(0.1, 1))
+        save_exit_button.bind(on_press=self.save_and_exit)
         self.score_label = Label(text='0000', size_hint=(0.25, 1))
         self.update_font_size(self.score_label)
         score_button = Button(background_normal='icons/score.png', size_hint=(0.1, 1))
@@ -35,6 +37,7 @@ class MyGameApp(App):
         top_layout.add_widget(self.score_label)
         top_layout.add_widget(score_button) 
         return top_layout
+
 
     def create_the_layouts(self):
         color_buttons_layout = self.create_color_buttons_layout()
@@ -65,38 +68,41 @@ class MyGameApp(App):
                 button.bind(on_press=self.on_button_click)
         return grid_layout
     
+
+
+    
     def on_button_click(self, button):
         if self.selected_button and self.selected_button.background_normal in COLOR_BUTTONS:
-            self.move_colored_button_to_empty(button)
-        else:
-            self.select_colored_button(button)
-        self.space_info()
-
-    def select_colored_button(self, button):
-        if button.background_normal in COLOR_BUTTONS:
-            self.selected_button = button
+            if self.grid_state[button.row][button.col] == 0:
+                self.move_color_to_normal_button(self.selected_button, button)
+                self.selected_button = None
+                self.assign_random_colors_to_buttons()
+                self.space_info()
+                return
+            else:
+                self.selected_button.background_color = [1, 1, 1, 1]
+        self.selected_button = button
+        if self.selected_button.background_normal in COLOR_BUTTONS:
+            self.selected_button.background_color = [1.5, 1.5, 1.5, 1]
             self.colored_button_pos_flag = True
-            self.but_pos = [button.row, button.col]
-            button.background_color = [1.5, 1.5, 1.5, 1]
         else:
-            self.selected_button = None
+            self.selected_button.background_color = [0, 0, 0, 0.5]
             self.colored_button_pos_flag = False
+        print(self.colored_button_pos_flag)
 
-    def move_colored_button_to_empty(self, button):
-        if button.background_normal not in COLOR_BUTTONS and self.colored_button_pos_flag:
-            button.background_normal = self.selected_button.background_normal
-            button.background_color = [1, 1, 1, 1]
-            self.reset_button_state(self.selected_button)
-            self.grid_state[self.but_pos[0]][self.but_pos[1]] = 0
-            self.grid_state[button.row][button.col] = 1
-            self.selected_button = None
-            self.colored_button_pos_flag = False
-            self.but_pos = []
+        
 
-    def reset_button_state(self, button):
-        button.background_normal = ''
-        button.background_color = [0, 0, 0, 0.5]
-        self.assign_random_colors_to_buttons()
+
+    def move_color_to_normal_button(self, colored_button, normal_button):
+        normal_button.background_normal = colored_button.background_normal
+        normal_button.background_down = colored_button.background_down
+        normal_button.background_color = [1, 1, 1, 1]
+        self.grid_state[normal_button.row][normal_button.col] = 1
+        colored_button.background_normal = ''
+        colored_button.background_down = ''
+        colored_button.background_color = [0, 0, 0, 0.5]
+        self.grid_state[colored_button.row][colored_button.col] = 0
+
 
     def space_info(self):
         spaces = 0
@@ -137,6 +143,22 @@ class MyGameApp(App):
 
     def on_size(self, *args):
         self.update_font_size(self.score_label)
+
+    def reset_game(self, instance):
+        """TODO: fix this method"""
+        self.score = 0
+        self.score_label.text = '0000'
+        self.grid_state = [[0 for _ in range(9)] for _ in range(9)]
+        for button in self.grid_buttons:
+            button.background_normal = ''
+            button.background_color = [0, 0, 0, 0.5]
+        self.assign_random_colors_to_buttons()
+        self.space_info()
+
+
+
+    def save_and_exit(self, instance):
+        App.get_running_app().stop()
 
     def build(self):
         Window.size = (600, 1050)
