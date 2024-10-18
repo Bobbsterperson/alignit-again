@@ -22,6 +22,8 @@ class MyGameApp(App):
         self.grid_buttons = []
         self.grid_state = [[0 for _ in range(9)] for _ in range(9)]
         self.is_moving = False
+        self.current_colors = []
+        self.next_colors = []
 
     def create_top_layout(self):
         top_layout = BoxLayout(orientation='horizontal', size_hint_y=0.09, padding=[10, 10, 10, 30], spacing=20)
@@ -54,8 +56,8 @@ class MyGameApp(App):
 
     def update_color_buttons(self):
         self.color_buttons_layout.clear_widgets()
-        selected_colors = random.sample(COLOR_BUTTONS, 3)
-        for color in selected_colors:
+        self.current_colors = random.sample(COLOR_BUTTONS, 3)
+        for color in self.current_colors:
             color_button = Button(background_normal=color, size_hint=(0.1, 1))
             self.color_buttons_layout.add_widget(color_button)
 
@@ -106,6 +108,7 @@ class MyGameApp(App):
             Clock.schedule_once(lambda dt: self.move_color_button_step_by_step(), 0.2)
         else:
             self.is_moving = False
+            self.next_colors = self.current_colors
             self.update_color_buttons()
             self.assign_random_colors_to_buttons()
             self.space_info()
@@ -132,10 +135,9 @@ class MyGameApp(App):
 
     def assign_random_colors_to_buttons(self):
         available_buttons = self.check_for_free_pos()
-        if len(available_buttons) >= 3:
-            selected_buttons = random.sample(available_buttons, 3)
-            selected_colors = random.sample(COLOR_BUTTONS, 3)
-            for button, color in zip(selected_buttons, selected_colors):
+        if len(available_buttons) >= len(self.next_colors):
+            selected_buttons = random.sample(available_buttons, len(self.next_colors))
+            for button, color in zip(selected_buttons, self.next_colors):
                 button.background_normal = color
                 button.background_down = color
                 button.background_color = [1, 1, 1, 1]
@@ -159,6 +161,8 @@ class MyGameApp(App):
         for button in self.grid_buttons:
             button.background_normal = ''
             button.background_color = [0, 0, 0, 0.5]
+        self.next_colors = random.sample(COLOR_BUTTONS, 3)
+        self.update_color_buttons()
         self.assign_random_colors_to_buttons()
         self.space_info()
 
@@ -174,9 +178,9 @@ class MyGameApp(App):
         main_layout.add_widget(top_layout)
         main_layout.add_widget(self.create_the_layouts())
         parent.add_widget(main_layout)
+        self.next_colors = random.sample(COLOR_BUTTONS, 3)
         self.assign_random_colors_to_buttons()
         return parent
-
 
 if __name__ == '__main__':
     MyGameApp().run()
