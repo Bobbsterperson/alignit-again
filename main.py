@@ -76,16 +76,19 @@ class MyGameApp(App):
                 end = (button.row, button.col)
                 path = astar(self.grid_state, start, end)
                 if path:
-                    self.move_color_to_normal_button(self.selected_button, button)
+                    self.move_path = path
+                    self.move_color_button_step_by_step()
+                    
                     self.selected_button = None
-                    self.assign_random_colors_to_buttons()
+                    self.assign_random_colors_to_buttons() 
                     self.space_info()
+
                 else:
                     print("No free path")
                 return
             else:
                 self.selected_button.background_color = [1, 1, 1, 1]
-        
+
         self.selected_button = button
         if self.selected_button.background_normal in COLOR_BUTTONS:
             self.selected_button.background_color = [1.5, 1.5, 1.5, 1]
@@ -95,15 +98,29 @@ class MyGameApp(App):
             self.colored_button_pos_flag = False
         print(self.colored_button_pos_flag)
 
+
+
+    def move_color_button_step_by_step(self):
+        if not self.move_path or len(self.move_path) < 2:
+            return
+        current_pos = self.move_path.pop(0)
+        next_pos = self.move_path[0]
+        colored_button = self.grid_buttons[current_pos[0] * 9 + current_pos[1]]
+        normal_button = self.grid_buttons[next_pos[0] * 9 + next_pos[1]]
+        self.move_color_to_normal_button(colored_button, normal_button)
+        if len(self.move_path) > 1:
+            Clock.schedule_once(lambda dt: self.move_color_button_step_by_step(), 0.2)
+
+
     def move_color_to_normal_button(self, colored_button, normal_button):
         normal_button.background_normal = colored_button.background_normal
         normal_button.background_down = colored_button.background_down
         normal_button.background_color = [1, 1, 1, 1]
         self.grid_state[normal_button.row][normal_button.col] = 1
+        self.grid_state[colored_button.row][colored_button.col] = 0
         colored_button.background_normal = ''
         colored_button.background_down = ''
         colored_button.background_color = [0, 0, 0, 0.5]
-        self.grid_state[colored_button.row][colored_button.col] = 0
 
     def space_info(self):
         spaces = 0
