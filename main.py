@@ -72,7 +72,7 @@ class MyGameApp(App):
         if self.is_moving:
             return     
         if self.selected_button and self.selected_button.background_normal in COLOR_BUTTONS:
-            if self.grid_state[button.row][button.col] == 0:  # Valid move
+            if self.grid_state[button.row][button.col] == 0:
                 start = (self.selected_button.row, self.selected_button.col)
                 end = (button.row, button.col)
                 path = astar(self.grid_state, start, end)
@@ -80,7 +80,6 @@ class MyGameApp(App):
                     self.move_path = path
                     self.move_color_button_step_by_step()
                     self.selected_button = None
-                    self.space_info()
                 else:
                     print("No free path")
             else:
@@ -92,10 +91,6 @@ class MyGameApp(App):
             self.selected_button.background_color = [0, 0, 0, 0.5]
 
     def move_color_button_step_by_step(self):
-        if not self.move_path or len(self.move_path) < 2:
-            self.is_moving = False
-            self.assign_random_colors_to_buttons()
-            return
         if not self.is_moving:
             self.is_moving = True
         current_pos = self.move_path.pop(0)
@@ -108,6 +103,7 @@ class MyGameApp(App):
         else:
             self.is_moving = False
             self.assign_random_colors_to_buttons()
+            self.space_info()
 
     def move_color_to_normal_button(self, colored_button, normal_button):
         normal_button.background_normal = colored_button.background_normal
