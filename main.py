@@ -48,12 +48,16 @@ class MyGameApp(App):
         return color_grid_layout
 
     def create_color_buttons_layout(self):
-        color_buttons_layout = BoxLayout(orientation='horizontal', size_hint_y=0.2, spacing=10, padding=[10, 150, 230, 10])
+        self.color_buttons_layout = BoxLayout(orientation='horizontal', size_hint_y=0.2, spacing=10, padding=[10, 150, 230, 10])
+        self.update_color_buttons()
+        return self.color_buttons_layout
+
+    def update_color_buttons(self):
+        self.color_buttons_layout.clear_widgets()
         selected_colors = random.sample(COLOR_BUTTONS, 3)
         for color in selected_colors:
             color_button = Button(background_normal=color, size_hint=(0.1, 1))
-            color_buttons_layout.add_widget(color_button)
-        return color_buttons_layout
+            self.color_buttons_layout.add_widget(color_button)
 
     def create_grid_layout(self):
         grid_layout = GridLayout(cols=9, rows=9, size_hint=(1, 0.5), spacing=4)
@@ -102,6 +106,7 @@ class MyGameApp(App):
             Clock.schedule_once(lambda dt: self.move_color_button_step_by_step(), 0.2)
         else:
             self.is_moving = False
+            self.update_color_buttons()
             self.assign_random_colors_to_buttons()
             self.space_info()
 
