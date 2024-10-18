@@ -105,7 +105,7 @@ class MyGameApp(App):
         normal_button = self.grid_buttons[next_pos[0] * 9 + next_pos[1]]
         self.move_color_to_normal_button(colored_button, normal_button)
         if len(self.move_path) > 1:
-            Clock.schedule_once(lambda dt: self.move_color_button_step_by_step(), 0.2)
+            Clock.schedule_once(lambda dt: self.move_color_button_step_by_step(), 0.1)
         else:
             self.is_moving = False
             self.next_colors = self.current_colors
@@ -122,6 +122,43 @@ class MyGameApp(App):
         colored_button.background_normal = ''
         colored_button.background_down = ''
         colored_button.background_color = [0, 0, 0, 0.5]
+        line_buttons = self.check_line_of_same_color(normal_button)
+        if len(line_buttons) >= 5:
+            for btn in line_buttons:
+                btn.background_normal = ''
+                btn.background_color = [0, 0, 0, 0.5]
+                self.grid_state[btn.row][btn.col] = 0
+
+    def check_line_of_same_color(self, button):
+        color = button.background_normal
+        if color not in COLOR_BUTTONS:
+            return []
+        directions = {
+            "horizontal": [(0, -1), (0, 1)],
+            "vertical": [(-1, 0), (1, 0)],
+            "diagonal1": [(-1, -1), (1, 1)],
+            "diagonal2": [(-1, 1), (1, -1)]
+        }
+        line_positions = []
+
+        for direction, vectors in directions.items():
+            line = [button]
+            for dx, dy in vectors:
+                row, col = button.row, button.col
+                while True:
+                    row += dx
+                    col += dy
+                    if 0 <= row < 9 and 0 <= col < 9:
+                        adjacent_button = self.grid_buttons[row * 9 + col]
+                        if adjacent_button.background_normal == color:
+                            line.append(adjacent_button)
+                        else:
+                            break
+                    else:
+                        break
+            if len(line) >= 3:
+                line_positions.extend(line)
+        return line_positions
 
     def space_info(self):
         spaces = sum(row.count(0) for row in self.grid_state)
