@@ -82,26 +82,37 @@ class MyGameApp(App):
         return grid_layout
     
     def on_button_click(self, button):
-        if self.is_moving:
-            return     
+        if self.is_moving:  # Ignore clicks while a button is moving
+            return
+
+        # If a button is already selected and we clicked on an empty cell, attempt to move it
         if self.selected_button and self.selected_button.background_normal in COLOR_BUTTONS:
-            if self.grid_state[button.row][button.col] == 0:
+            if self.grid_state[button.row][button.col] == 0:  # Ensure the target cell is empty
                 start = (self.selected_button.row, self.selected_button.col)
                 end = (button.row, button.col)
                 path = astar(self.grid_state, start, end)
-                if path:
+                if path:  # If a valid path exists
                     self.move_path = path
                     self.move_color_button_step_by_step()
-                    self.selected_button = None
+                    self.selected_button = None  # Reset selection after starting the move
                 else:
-                    print("No free path")
+                    print("No free path available")
             else:
+                # If a non-empty cell is clicked, reset the selection
                 self.selected_button.background_color = [1, 1, 1, 1]
-        self.selected_button = button
-        if self.selected_button.background_normal in COLOR_BUTTONS:
-            self.selected_button.background_color = [1.5, 1.5, 1.5, 1]
+                self.selected_button = None
+
+        # Set the selected button to the current button if it's a colored button
+        if button.background_normal in COLOR_BUTTONS:
+            if self.selected_button:  # Deselect previously selected button
+                self.selected_button.background_color = [1, 1, 1, 1]
+            self.selected_button = button  # Set new selection
+            self.selected_button.background_color = [1.5, 1.5, 1.5, 1]  # Highlight the selected button
         else:
-            self.selected_button.background_color = [0, 0, 0, 0.5]
+            # Deselect if a non-color button is clicked
+            if self.selected_button:
+                self.selected_button.background_color = [1, 1, 1, 1]
+            self.selected_button = None
 
     def move_color_button_step_by_step(self):
         if not self.is_moving:
