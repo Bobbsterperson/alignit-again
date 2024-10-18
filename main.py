@@ -10,8 +10,15 @@ from kivy.uix.relativelayout import RelativeLayout
 from kivy.clock import Clock
 from astar import astar
 
-COLOR_BUTTONS = ['icons/blue.png', 'icons/green.png', 'icons/orange.png', 'icons/pink.png', 
-                 'icons/purple.png', 'icons/turquoise.png', 'icons/yellow.png']
+CROWN = 'icons/crown.png'
+COLOR_BUTTONS = ['icons/blue.png', 
+                 'icons/green.png', 
+                #  'icons/orange.png', 
+                #  'icons/pink.png', 
+                #  'icons/purple.png', 
+                #  'icons/turquoise.png', 
+                #  'icons/yellow.png', 
+                 CROWN]
 BACKGR = 'icons/background.png'
 
 class MyGameApp(App):
@@ -124,6 +131,7 @@ class MyGameApp(App):
         colored_button.background_color = [0, 0, 0, 0.5]
         line_buttons = self.check_line_of_same_color(normal_button)
         if len(line_buttons) >= 5:
+            self.increase_score_by(len(line_buttons))
             for btn in line_buttons:
                 btn.background_normal = ''
                 btn.background_color = [0, 0, 0, 0.5]
@@ -131,8 +139,9 @@ class MyGameApp(App):
 
     def check_line_of_same_color(self, button):
         color = button.background_normal
-        if color not in COLOR_BUTTONS:
+        if color not in COLOR_BUTTONS and color != CROWN:
             return []
+
         directions = {
             "horizontal": [(0, -1), (0, 1)],
             "vertical": [(-1, 0), (1, 0)],
@@ -140,7 +149,6 @@ class MyGameApp(App):
             "diagonal2": [(-1, 1), (1, -1)]
         }
         line_positions = []
-
         for direction, vectors in directions.items():
             line = [button]
             for dx, dy in vectors:
@@ -150,13 +158,17 @@ class MyGameApp(App):
                     col += dy
                     if 0 <= row < 9 and 0 <= col < 9:
                         adjacent_button = self.grid_buttons[row * 9 + col]
-                        if adjacent_button.background_normal == color:
+                        adjacent_color = adjacent_button.background_normal
+                        if adjacent_color == color or adjacent_color == CROWN:
                             line.append(adjacent_button)
+                        elif color == CROWN and adjacent_color in COLOR_BUTTONS:
+                            line.append(adjacent_button)
+                            color = adjacent_color
                         else:
                             break
                     else:
                         break
-            if len(line) >= 3:
+            if len(line) >= 5:
                 line_positions.extend(line)
         return line_positions
 
@@ -179,6 +191,17 @@ class MyGameApp(App):
                 button.background_down = color
                 button.background_color = [1, 1, 1, 1]
                 self.grid_state[button.row][button.col] = 1
+                line_buttons = self.check_line_of_same_color(button)
+                if len(line_buttons) >= 5:
+                    self.increase_score_by(len(line_buttons))
+                    for btn in line_buttons:
+                        btn.background_normal = ''
+                        btn.background_color = [0, 0, 0, 0.5]
+                        self.grid_state[btn.row][btn.col] = 0
+
+    def increase_score_by(self, count):
+        self.score += count
+        self.score_label.text = f'{self.score:04d}'
 
     def increase_score(self, instance):
         self.score += 1
