@@ -82,34 +82,28 @@ class MyGameApp(App):
         return grid_layout
     
     def on_button_click(self, button):
-        if self.is_moving:  # Ignore clicks while a button is moving
+        if self.is_moving:
             return
-
-        # If a button is already selected and we clicked on an empty cell, attempt to move it
         if self.selected_button and self.selected_button.background_normal in COLOR_BUTTONS:
-            if self.grid_state[button.row][button.col] == 0:  # Ensure the target cell is empty
+            if self.grid_state[button.row][button.col] == 0:
                 start = (self.selected_button.row, self.selected_button.col)
                 end = (button.row, button.col)
                 path = astar(self.grid_state, start, end)
-                if path:  # If a valid path exists
+                if path:
                     self.move_path = path
                     self.move_color_button_step_by_step()
-                    self.selected_button = None  # Reset selection after starting the move
+                    self.selected_button = None
                 else:
                     print("No free path available")
             else:
-                # If a non-empty cell is clicked, reset the selection
                 self.selected_button.background_color = [1, 1, 1, 1]
                 self.selected_button = None
-
-        # Set the selected button to the current button if it's a colored button
         if button.background_normal in COLOR_BUTTONS:
-            if self.selected_button:  # Deselect previously selected button
+            if self.selected_button:
                 self.selected_button.background_color = [1, 1, 1, 1]
-            self.selected_button = button  # Set new selection
-            self.selected_button.background_color = [1.5, 1.5, 1.5, 1]  # Highlight the selected button
+            self.selected_button = button
+            self.selected_button.background_color = [1.5, 1.5, 1.5, 1]
         else:
-            # Deselect if a non-color button is clicked
             if self.selected_button:
                 self.selected_button.background_color = [1, 1, 1, 1]
             self.selected_button = None
@@ -149,39 +143,45 @@ class MyGameApp(App):
                 self.grid_state[btn.row][btn.col] = 0
 
     def check_line_of_same_color(self, button):
-        color = button.background_normal
-        if color not in COLOR_BUTTONS and color != CROWN:
+        initial_color = button.background_normal
+        if initial_color not in COLOR_BUTTONS and initial_color != CROWN:
             return []
-
         directions = {
             "horizontal": [(0, -1), (0, 1)],
             "vertical": [(-1, 0), (1, 0)],
             "diagonal1": [(-1, -1), (1, 1)],
             "diagonal2": [(-1, 1), (1, -1)]
         }
-        line_positions = []
+        all_line_positions = set()
         for direction, vectors in directions.items():
-            line = [button]
-            for dx, dy in vectors:
-                row, col = button.row, button.col
-                while True:
-                    row += dx
-                    col += dy
-                    if 0 <= row < 9 and 0 <= col < 9:
-                        adjacent_button = self.grid_buttons[row * 9 + col]
-                        adjacent_color = adjacent_button.background_normal
-                        if adjacent_color == color or adjacent_color == CROWN:
-                            line.append(adjacent_button)
-                        elif color == CROWN and adjacent_color in COLOR_BUTTONS:
-                            line.append(adjacent_button)
-                            color = adjacent_color
+            for color_to_check in COLOR_BUTTONS:
+                line = [button]
+                current_color = initial_color if initial_color != CROWN else color_to_check
+
+                for dx, dy in vectors:
+                    row, col = button.row, button.col
+                    while True:
+                        row += dx
+                        col += dy
+                        if 0 <= row < 9 and 0 <= col < 9:
+                            adjacent_button = self.grid_buttons[row * 9 + col]
+                            adjacent_color = adjacent_button.background_normal
+
+                            if adjacent_color == current_color or adjacent_color == CROWN:
+                                line.append(adjacent_button)
+                            elif current_color == CROWN and adjacent_color in COLOR_BUTTONS:
+                                line.append(adjacent_button)
+                                current_color = adjacent_color
+                            else:
+                                break
                         else:
                             break
-                    else:
-                        break
-            if len(line) >= 5:
-                line_positions.extend(line)
-        return line_positions
+                if len(line) >= 5:
+                    all_line_positions.update(line)
+        if len(all_line_positions) > 0:
+            for button in all_line_positions:
+                button.background_normal = ''
+        return list(all_line_positions)
 
     def space_info(self):
         spaces = sum(row.count(0) for row in self.grid_state)
@@ -251,6 +251,7 @@ class MyGameApp(App):
         parent.add_widget(main_layout)
         self.next_colors = random.sample(COLOR_BUTTONS, 3)
         self.assign_random_colors_to_buttons()
+        self.space_info()
         return parent
 
 if __name__ == '__main__':
