@@ -9,6 +9,8 @@ from kivy.uix.image import Image
 from kivy.uix.relativelayout import RelativeLayout
 from kivy.clock import Clock
 from astar import astar
+import json
+
 
 CROWN = 'icons/crown.png'
 COLOR_BUTTONS = ['icons/blue.png', 
@@ -237,7 +239,53 @@ class MyGameApp(App):
         self.assign_random_colors_to_buttons()
         self.space_info()
 
+    def save_game(self):
+        game_state = {
+            'grid_state': self.grid_state,
+            'button_states': [
+                {
+                    'image': button.background_normal,
+                    'opacity': button.background_color
+                } for button in self.grid_buttons
+            ],
+            'score': self.score,
+            'high_scores': self.get_high_scores()
+        }
+        with open('game_save.json', 'w') as f:
+            json.dump(game_state, f)
+
+    def load_game(self):
+        try:
+            with open('game_save.json', 'r') as f:
+                game_state = json.load(f)
+                self.grid_state = game_state['grid_state']
+                self.score = game_state['score']
+                self.update_score_label()
+                for button, button_state in zip(self.grid_buttons, game_state['button_states']):
+                    button.background_normal = button_state['image']
+                    button.background_color = button_state['opacity'] 
+                self.space_info()
+        except FileNotFoundError:
+            self.assign_random_colors_to_buttons()
+            print("No saved game")
+
+    def get_high_scores(self):
+        try:
+            with open('high_scores.json', 'r') as f:
+                high_scores = json.load(f)
+        except FileNotFoundError:
+            high_scores = []
+        high_scores.append(self.score)
+        high_scores = sorted(set(high_scores), reverse=True)[:5]
+        with open('high_scores.json', 'w') as f:
+            json.dump(high_scores, f)
+        return high_scores
+
+    def update_score_label(self):
+        self.score_label.text = f'{self.score:04d}'
+
     def save_and_exit(self, instance):
+        self.save_game()
         App.get_running_app().stop()
 
     def build(self):
@@ -249,10 +297,9 @@ class MyGameApp(App):
         main_layout.add_widget(top_layout)
         main_layout.add_widget(self.create_the_layouts())
         parent.add_widget(main_layout)
+        self.load_game()
         self.next_colors = random.sample(COLOR_BUTTONS, 3)
-        self.assign_random_colors_to_buttons()
         self.space_info()
         return parent
-
 if __name__ == '__main__':
     MyGameApp().run()
