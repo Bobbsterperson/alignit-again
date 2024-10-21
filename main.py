@@ -1,6 +1,8 @@
 from kivy.app import App
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.label import Label
+from kivy.uix.popup import Popup
+
 from kivy.uix.boxlayout import BoxLayout
 from kivy.core.window import Window
 from kivy.uix.button import Button
@@ -15,11 +17,11 @@ import json
 CROWN = 'icons/crown.png'
 COLOR_BUTTONS = ['icons/blue.png', 
                  'icons/green.png', 
-                #  'icons/orange.png', 
-                #  'icons/pink.png', 
-                #  'icons/purple.png', 
-                #  'icons/turquoise.png', 
-                #  'icons/yellow.png', 
+                 'icons/orange.png', 
+                 'icons/pink.png', 
+                 'icons/purple.png', 
+                 'icons/turquoise.png', 
+                 'icons/yellow.png', 
                  CROWN]
 BACKGR = 'icons/background.png'
 
@@ -43,13 +45,12 @@ class MyGameApp(App):
         self.score_label = Label(text='0000', size_hint=(0.25, 1))
         self.update_font_size(self.score_label)
         score_button = Button(background_normal='icons/score.png', size_hint=(0.1, 1))
-        score_button.bind(on_press=self.increase_score)     
+        score_button.bind(on_press=self.show_high_scores_popup)
         top_layout.add_widget(reset_button)
         top_layout.add_widget(save_exit_button)
         top_layout.add_widget(self.score_label)
-        top_layout.add_widget(score_button) 
+        top_layout.add_widget(score_button)
         return top_layout
-
     def create_the_layouts(self):
         color_buttons_layout = self.create_color_buttons_layout()
         grid_layout = self.create_grid_layout()
@@ -280,6 +281,14 @@ class MyGameApp(App):
         with open('high_scores.json', 'w') as f:
             json.dump(high_scores, f)
         return high_scores
+
+    def show_high_scores_popup(self, instance):
+        high_scores = self.get_high_scores()
+        score_text = "\n".join([f"{i+1}. {score}" for i, score in enumerate(high_scores)])
+        content = Label(text=score_text, halign="center", valign="middle", font_size='60sp')
+        content.bind(size=content.setter('text_size'))
+        popup = Popup(title='High Scores', content=content, size_hint=(0.5, 0.5))
+        popup.open()
 
     def update_score_label(self):
         self.score_label.text = f'{self.score:04d}'
