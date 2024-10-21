@@ -218,8 +218,13 @@ class MyGameApp(App):
             self.show_game_over_popup()
 
     def show_game_over_popup(self):
+        high_scores = self.get_high_scores()
+        best_score = high_scores[0] if high_scores else 0
         content = BoxLayout(orientation='vertical', padding=10, spacing=10)
-        game_over_label = Label(text="Game Over", font_size='30sp')
+        game_over_label = Label(text=f"Score: {self.score}", font_size='50sp')
+        if self.score > best_score:
+            best_score_label = Label(text="New Best Score!", font_size='24sp', color=(1, 0.8, 0, 1))
+            content.add_widget(best_score_label)
         restart_button = Button(text="Restart", size_hint=(1, 0.4))
         content.add_widget(game_over_label)
         content.add_widget(restart_button)
@@ -294,10 +299,12 @@ class MyGameApp(App):
                 high_scores = json.load(f)
         except FileNotFoundError:
             high_scores = []
-        high_scores.append(self.score)
-        high_scores = sorted(set(high_scores), reverse=True)[:5]
-        with open('high_scores.json', 'w') as f:
-            json.dump(high_scores, f)
+        if self.score > (high_scores[0] if high_scores else 0):
+            high_scores.append(self.score)
+            high_scores = sorted(set(high_scores), reverse=True)[:5]
+            with open('high_scores.json', 'w') as f:
+                json.dump(high_scores, f)
+
         return high_scores
 
     def show_high_scores_popup(self, instance):
