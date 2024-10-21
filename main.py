@@ -264,6 +264,9 @@ class MyGameApp(App):
         self.space_info()
 
     def save_game(self):
+        if self.selected_button:
+            self.selected_button.background_color = [1, 1, 1, 1]
+            self.selected_button = None
         game_state = {
             'grid_state': self.grid_state,
             'button_states': [
@@ -275,6 +278,7 @@ class MyGameApp(App):
             'score': self.score,
             'high_scores': self.get_high_scores()
         }
+        
         with open('game_save.json', 'w') as f:
             json.dump(game_state, f)
 
