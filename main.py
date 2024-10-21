@@ -198,20 +198,35 @@ class MyGameApp(App):
 
     def assign_random_colors_to_buttons(self):
         available_buttons = self.check_for_free_pos()
-        if len(available_buttons) >= len(self.next_colors):
-            selected_buttons = random.sample(available_buttons, len(self.next_colors))
-            for button, color in zip(selected_buttons, self.next_colors):
-                button.background_normal = color
-                button.background_down = color
-                button.background_color = [1, 1, 1, 1]
-                self.grid_state[button.row][button.col] = 1
-                line_buttons = self.check_line_of_same_color(button)
-                if len(line_buttons) >= 5:
-                    self.increase_score_by(len(line_buttons))
-                    for btn in line_buttons:
-                        btn.background_normal = ''
-                        btn.background_color = [0, 0, 0, 0.5]
-                        self.grid_state[btn.row][btn.col] = 0
+        num_colors_to_spawn = min(len(available_buttons), len(self.next_colors))
+        if num_colors_to_spawn == 0:
+            return
+        selected_buttons = random.sample(available_buttons, num_colors_to_spawn)
+        for button, color in zip(selected_buttons, self.next_colors[:num_colors_to_spawn]):
+            button.background_normal = color
+            button.background_down = color
+            button.background_color = [1, 1, 1, 1]
+            self.grid_state[button.row][button.col] = 1
+            line_buttons = self.check_line_of_same_color(button)
+            if len(line_buttons) >= 5:
+                self.increase_score_by(len(line_buttons))
+                for btn in line_buttons:
+                    btn.background_normal = ''
+                    btn.background_color = [0, 0, 0, 0.5]
+                    self.grid_state[btn.row][btn.col] = 0
+        if all(all(cell != 0 for cell in row) for row in self.grid_state):
+            self.show_game_over_popup()
+
+    def show_game_over_popup(self):
+        content = BoxLayout(orientation='vertical', padding=10, spacing=10)
+        game_over_label = Label(text="Game Over", font_size='30sp')
+        restart_button = Button(text="Restart", size_hint=(1, 0.4))
+        content.add_widget(game_over_label)
+        content.add_widget(restart_button)
+        popup = Popup(title="Game Over", content=content, size_hint=(0.5, 0.5))
+        restart_button.bind(on_press=lambda *args: (self.reset_game(None), popup.dismiss()))
+        popup.open()
+
 
     def increase_score_by(self, count):
         self.score += count
@@ -232,6 +247,9 @@ class MyGameApp(App):
         self.score = 0
         self.score_label.text = '0000'
         self.grid_state = [[0 for _ in range(9)] for _ in range(9)]
+        if self.selected_button:
+            self.selected_button.background_color = [1, 1, 1, 1]
+            self.selected_button = None
         for button in self.grid_buttons:
             button.background_normal = ''
             button.background_color = [0, 0, 0, 0.5]
