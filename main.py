@@ -13,7 +13,6 @@ from kivy.clock import Clock
 from astar import astar
 import json
 
-
 CROWN = 'icons/crown.png'
 COLOR_BUTTONS = ['icons/blue.png', 
                  'icons/green.png', 
@@ -51,6 +50,7 @@ class MyGameApp(App):
         top_layout.add_widget(self.score_label)
         top_layout.add_widget(score_button)
         return top_layout
+    
     def create_the_layouts(self):
         color_buttons_layout = self.create_color_buttons_layout()
         grid_layout = self.create_grid_layout()
@@ -149,42 +149,52 @@ class MyGameApp(App):
         initial_color = button.background_normal
         if initial_color not in COLOR_BUTTONS and initial_color != CROWN:
             return []
-        directions = {
+        all_line_positions = set()
+        directions = self.get_direction_vectors()
+        for direction, vectors in directions.items():
+            for color_to_check in COLOR_BUTTONS:
+                line = self.check_direction(button, vectors, initial_color, color_to_check)
+                if len(line) >= 5:
+                    all_line_positions.update(line)
+        if all_line_positions:
+            self.clear_button_colors(all_line_positions)
+        return list(all_line_positions)
+
+    def get_direction_vectors(self):
+        return {
             "horizontal": [(0, -1), (0, 1)],
             "vertical": [(-1, 0), (1, 0)],
             "diagonal1": [(-1, -1), (1, 1)],
             "diagonal2": [(-1, 1), (1, -1)]
         }
-        all_line_positions = set()
-        for direction, vectors in directions.items():
-            for color_to_check in COLOR_BUTTONS:
-                line = [button]
-                current_color = initial_color if initial_color != CROWN else color_to_check
 
-                for dx, dy in vectors:
-                    row, col = button.row, button.col
-                    while True:
-                        row += dx
-                        col += dy
-                        if 0 <= row < 9 and 0 <= col < 9:
-                            adjacent_button = self.grid_buttons[row * 9 + col]
-                            adjacent_color = adjacent_button.background_normal
+    def check_direction(self, button, vectors, initial_color, color_to_check):
+        line = [button]
+        current_color = initial_color if initial_color != CROWN else color_to_check
+        for dx, dy in vectors:
+            row, col = button.row, button.col
+            while True:
+                row += dx
+                col += dy
+                if 0 <= row < 9 and 0 <= col < 9:
+                    adjacent_button = self.grid_buttons[row * 9 + col]
+                    adjacent_color = adjacent_button.background_normal
 
-                            if adjacent_color == current_color or adjacent_color == CROWN:
-                                line.append(adjacent_button)
-                            elif current_color == CROWN and adjacent_color in COLOR_BUTTONS:
-                                line.append(adjacent_button)
-                                current_color = adjacent_color
-                            else:
-                                break
-                        else:
-                            break
-                if len(line) >= 5:
-                    all_line_positions.update(line)
-        if len(all_line_positions) > 0:
-            for button in all_line_positions:
-                button.background_normal = ''
-        return list(all_line_positions)
+                    if adjacent_color == current_color or adjacent_color == CROWN:
+                        line.append(adjacent_button)
+                    elif current_color == CROWN and adjacent_color in COLOR_BUTTONS:
+                        line.append(adjacent_button)
+                        current_color = adjacent_color
+                    else:
+                        break
+                else:
+                    break
+        return line
+
+    def clear_button_colors(self, buttons):
+        for button in buttons:
+            button.background_normal = ''
+
 
     def space_info(self):
         spaces = sum(row.count(0) for row in self.grid_state)
