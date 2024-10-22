@@ -118,6 +118,7 @@ class MyGameApp(App):
         next_pos = self.move_path[0]
         colored_button = self.grid_buttons[current_pos[0] * 9 + current_pos[1]]
         normal_button = self.grid_buttons[next_pos[0] * 9 + next_pos[1]]
+        self.create_trail_effect(current_pos)
         self.move_color_to_normal_button(colored_button, normal_button)
         if len(self.move_path) > 1:
             Clock.schedule_once(lambda dt: self.move_color_button_step_by_step(), 0.1)
@@ -127,6 +128,20 @@ class MyGameApp(App):
             self.update_color_buttons()
             self.assign_random_colors_to_buttons()
             self.space_info()
+
+    def create_trail_effect(self, position):
+        button = self.grid_buttons[position[0] * 9 + position[1]]
+        trail_button = Button(
+            background_normal=button.background_normal,
+            background_color=[1, 1, 1, 0.3],
+            size_hint=(0.11, 0.067),
+            pos_hint={"x": button.x / Window.width, "y": button.y / Window.height}
+        )
+        self.root.add_widget(trail_button)
+        Clock.schedule_once(lambda dt: self.remove_trail(trail_button), 0.3)
+
+    def remove_trail(self, trail_button):
+        self.root.remove_widget(trail_button)
 
     def move_color_to_normal_button(self, colored_button, normal_button):
         normal_button.background_normal = colored_button.background_normal
