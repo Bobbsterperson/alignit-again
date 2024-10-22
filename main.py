@@ -89,7 +89,7 @@ class MyGameApp(App):
         return grid_layout
     
     def on_button_click(self, button):
-        if self.is_moving:
+        if self.is_moving or self.is_animation_running:
             return
         if self.selected_button and self.selected_button.background_normal in COLOR_BUTTONS:
             if self.grid_state[button.row][button.col] == 0:
@@ -263,10 +263,10 @@ class MyGameApp(App):
             self.show_game_over_popup()
 
     def highlight_new_button(self, button):
-        self.is_animation_running = True  # Set the flag to True at the start of animation
-        anim = Animation(background_color=[3, 3, 3, 1], duration=0.5)
-        anim += Animation(background_color=[1, 1, 1, 1], duration=0.5)
-        anim.bind(on_complete=self.animation_complete)  # Bind the completion to a method
+        self.is_animation_running = True
+        anim = Animation(background_color=[3, 3, 3, 1], duration=0.3)
+        anim += Animation(background_color=[1, 1, 1, 1], duration=0.2)
+        anim.bind(on_complete=self.animation_complete)
         anim.start(button)
 
     def animation_complete(self, animation, widget):
