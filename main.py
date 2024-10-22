@@ -159,7 +159,6 @@ class MyGameApp(App):
         colored_button.background_normal = ''
         colored_button.background_down = ''
         colored_button.background_color = [0, 0, 0, 0.5]
-
         line_buttons = self.check_line_of_same_color(normal_button)
         if len(line_buttons) >= 5:
             self.increase_score_by(len(line_buttons))
@@ -264,9 +263,14 @@ class MyGameApp(App):
             self.show_game_over_popup()
 
     def highlight_new_button(self, button):
+        self.is_animation_running = True  # Set the flag to True at the start of animation
         anim = Animation(background_color=[3, 3, 3, 1], duration=0.5)
         anim += Animation(background_color=[1, 1, 1, 1], duration=0.5)
+        anim.bind(on_complete=self.animation_complete)  # Bind the completion to a method
         anim.start(button)
+
+    def animation_complete(self, animation, widget):
+        self.is_animation_running = False
 
     def show_game_over_popup(self):
         high_scores = self.get_high_scores()
