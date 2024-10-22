@@ -2,7 +2,7 @@ from kivy.app import App
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.label import Label
 from kivy.uix.popup import Popup
-
+from kivy.animation import Animation
 from kivy.uix.boxlayout import BoxLayout
 from kivy.core.window import Window
 from kivy.uix.button import Button
@@ -152,13 +152,11 @@ class MyGameApp(App):
         colored_button.background_normal = ''
         colored_button.background_down = ''
         colored_button.background_color = [0, 0, 0, 0.5]
+
         line_buttons = self.check_line_of_same_color(normal_button)
         if len(line_buttons) >= 5:
             self.increase_score_by(len(line_buttons))
-            for btn in line_buttons:
-                btn.background_normal = ''
-                btn.background_color = [0, 0, 0, 0.5]
-                self.grid_state[btn.row][btn.col] = 0
+            self.clear_button_colors(line_buttons)
 
     def check_line_of_same_color(self, button):
         initial_color = button.background_normal
@@ -207,9 +205,24 @@ class MyGameApp(App):
         return line
 
     def clear_button_colors(self, buttons):
-        for button in buttons:
-            button.background_normal = ''
+        buttons_to_remove = []
 
+        def remove_all_buttons(instance, value):
+            for button in buttons_to_remove:
+                self.remove_button(button)
+        for button in buttons:
+            buttons_to_remove.append(button)
+            button.disabled = True
+            anim = Animation(background_color=[1, 1, 0, 1], duration=0.2)
+            anim += Animation(background_color=[1, 1, 1, 0.5], duration=0.3)
+            anim.bind(on_complete=lambda anim, value: remove_all_buttons(anim, value))
+            anim.start(button)
+
+    def remove_button(self, button):
+        button.background_normal = ''
+        button.background_color = [0, 0, 0, 0.5]
+        self.grid_state[button.row][button.col] = 0
+        button.disabled = False
 
     def space_info(self):
         spaces = sum(row.count(0) for row in self.grid_state)
