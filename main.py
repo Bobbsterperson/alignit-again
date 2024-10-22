@@ -12,7 +12,9 @@ from kivy.uix.relativelayout import RelativeLayout
 from kivy.clock import Clock
 from astar import astar
 import json
+from kivy.core.audio import SoundLoader
 
+no_path_sound = SoundLoader.load('icons/click.mp3')
 CROWN = 'icons/crown.png'
 COLOR_BUTTONS = ['icons/blue.png', 
                  'icons/green.png', 
@@ -26,7 +28,7 @@ BACKGR = 'icons/background.png'
 
 class MyGameApp(App):
     def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+        super().__init__(**kwargs)  
         self.score = 0
         self.selected_button = None
         self.grid_buttons = []
@@ -34,6 +36,8 @@ class MyGameApp(App):
         self.is_moving = False
         self.current_colors = []
         self.next_colors = []
+        self.no_path_sound = SoundLoader.load('icons/click.wav')
+        self.is_animation_running = False
 
     def create_top_layout(self):
         top_layout = BoxLayout(orientation='horizontal', size_hint_y=0.09, padding=[10, 10, 10, 30], spacing=20)
@@ -97,6 +101,7 @@ class MyGameApp(App):
                     self.move_color_button_step_by_step()
                     self.selected_button = None
                 else:
+                    self.no_path_sound.play()
                     print("No free path available")
             else:
                 self.selected_button.background_color = [1, 1, 1, 1]
@@ -114,6 +119,7 @@ class MyGameApp(App):
     def move_color_button_step_by_step(self):
         if not self.is_moving:
             self.is_moving = True
+            self.is_animation_running = True
         current_pos = self.move_path.pop(0)
         next_pos = self.move_path[0]
         colored_button = self.grid_buttons[current_pos[0] * 9 + current_pos[1]]
@@ -124,6 +130,7 @@ class MyGameApp(App):
             Clock.schedule_once(lambda dt: self.move_color_button_step_by_step(), 0.1)
         else:
             self.is_moving = False
+            self.is_animation_running = False
             self.next_colors = self.current_colors
             self.update_color_buttons()
             self.assign_random_colors_to_buttons()
@@ -245,6 +252,7 @@ class MyGameApp(App):
             button.background_down = color
             button.background_color = [1, 1, 1, 1]
             self.grid_state[button.row][button.col] = 1
+            self.highlight_new_button(button)
             line_buttons = self.check_line_of_same_color(button)
             if len(line_buttons) >= 5:
                 self.increase_score_by(len(line_buttons))
@@ -254,6 +262,11 @@ class MyGameApp(App):
                     self.grid_state[btn.row][btn.col] = 0
         if all(all(cell != 0 for cell in row) for row in self.grid_state):
             self.show_game_over_popup()
+
+    def highlight_new_button(self, button):
+        anim = Animation(background_color=[3, 3, 3, 1], duration=0.5)
+        anim += Animation(background_color=[1, 1, 1, 1], duration=0.5)
+        anim.start(button)
 
     def show_game_over_popup(self):
         high_scores = self.get_high_scores()
@@ -287,6 +300,8 @@ class MyGameApp(App):
         self.update_font_size(self.score_label)
 
     def reset_game(self, instance):
+        if self.is_animation_running:
+            return
         self.score = 0
         self.score_label.text = '0000'
         self.grid_state = [[0 for _ in range(9)] for _ in range(9)]
