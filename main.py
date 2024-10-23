@@ -14,7 +14,6 @@ from astar import astar
 import json
 from kivy.core.audio import SoundLoader
 
-no_path_sound = SoundLoader.load('icons/click.mp3')
 CROWN = 'icons/crown.png'
 COLOR_BUTTONS = ['icons/blue.png', 
                  'icons/green.png', 
@@ -36,7 +35,12 @@ class MyGameApp(App):
         self.is_moving = False
         self.current_colors = []
         self.next_colors = []
-        self.no_path_sound = SoundLoader.load('icons/click.wav')
+        self.no_path_sound = SoundLoader.load('icons/no_path.wav')
+        self.click_button = SoundLoader.load('icons/click.wav')
+        self.moving_button = SoundLoader.load('icons/move.wav')
+        self.ui = SoundLoader.load('icons/ui_butt.wav')
+        self.complete_line = SoundLoader.load('icons/complete_line.wav')
+        self.gameover = SoundLoader.load('icons/flatline.wav')
         self.is_animation_running = False
 
     def create_top_layout(self):
@@ -89,6 +93,8 @@ class MyGameApp(App):
         return grid_layout
     
     def on_button_click(self, button):
+        self.click_button.play()
+        self.cleanup_free_spaces()
         if self.is_moving or self.is_animation_running:
             return
         if self.selected_button and self.selected_button.background_normal in COLOR_BUTTONS:
@@ -117,6 +123,7 @@ class MyGameApp(App):
             self.selected_button = None
 
     def move_color_button_step_by_step(self):
+        self.moving_button.play()
         if not self.is_moving:
             self.is_moving = True
             self.is_animation_running = True
@@ -128,13 +135,25 @@ class MyGameApp(App):
         self.move_color_to_normal_button(colored_button, normal_button)
         if len(self.move_path) > 1:
             Clock.schedule_once(lambda dt: self.move_color_button_step_by_step(), 0.1)
+            
         else:
             self.is_moving = False
             self.is_animation_running = False
             self.next_colors = self.current_colors
             self.update_color_buttons()
             self.assign_random_colors_to_buttons()
+            self.cleanup_free_spaces()
             self.space_info()
+
+
+    def cleanup_free_spaces(self):
+        for row in range(9):
+            for col in range(9):
+                if self.grid_state[row][col] == 0:
+                    button = self.grid_buttons[row * 9 + col]
+                    if button.background_normal != '' or button.background_color != [0, 0, 0, 0.5]:
+                        button.background_normal = ''
+                        button.background_color = [0, 0, 0, 0.5]
 
     def create_trail_effect(self, position):
         button = self.grid_buttons[position[0] * 9 + position[1]]
@@ -211,6 +230,7 @@ class MyGameApp(App):
         return line
 
     def clear_button_colors(self, buttons):
+        self.complete_line.play()
         buttons_to_remove = []
 
         def remove_all_buttons(instance, value):
@@ -223,6 +243,7 @@ class MyGameApp(App):
             anim += Animation(background_color=[1, 1, 1, 0.5], duration=0.3)
             anim.bind(on_complete=lambda anim, value: remove_all_buttons(anim, value))
             anim.start(button)
+        self.cleanup_free_spaces()
 
     def remove_button(self, button):
         button.background_normal = ''
@@ -273,6 +294,7 @@ class MyGameApp(App):
         self.is_animation_running = False
 
     def show_game_over_popup(self):
+        self.gameover.play()
         high_scores = self.get_high_scores()
         best_score = high_scores[0] if high_scores else 0
         content = BoxLayout(orientation='vertical', padding=10, spacing=10)
@@ -304,6 +326,7 @@ class MyGameApp(App):
         self.update_font_size(self.score_label)
 
     def reset_game(self, instance):
+        self.ui.play()
         if self.is_animation_running:
             return
         self.score = 0
@@ -318,9 +341,11 @@ class MyGameApp(App):
         self.next_colors = random.sample(COLOR_BUTTONS, 3)
         self.update_color_buttons()
         self.assign_random_colors_to_buttons()
+        self.cleanup_free_spaces()
         self.space_info()
 
     def save_game(self):
+        self.ui.play()
         if self.selected_button:
             self.selected_button.background_color = [1, 1, 1, 1]
             self.selected_button = None
@@ -355,6 +380,7 @@ class MyGameApp(App):
             print("No saved game")
 
     def get_high_scores(self):
+        self.ui.play()
         try:
             with open('high_scores.json', 'r') as f:
                 high_scores = json.load(f)
