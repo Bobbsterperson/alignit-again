@@ -233,9 +233,11 @@ class MyGameApp(App):
         for button in buttons:
             buttons_to_remove.append(button)
             button.disabled = True
+            self.is_animation_running = True
             anim = Animation(background_color=[1, 1, 0, 1], duration=0.2)
             anim += Animation(background_color=[1, 1, 1, 0.5], duration=0.3)
             anim.bind(on_complete=lambda anim, value: remove_all_buttons(anim, value))
+            anim.bind(on_complete=self.animation_complete)
             anim.start(button)
 
 
@@ -323,7 +325,7 @@ class MyGameApp(App):
 
     def reset_game(self, instance):
         self.sound_manager.play_sound('ui')
-        if self.is_animation_running:
+        if self.is_moving or self.is_animation_running:
             return
         self.score = 0
         self.score_label.text = '0000'
@@ -341,7 +343,8 @@ class MyGameApp(App):
         self.space_info()
 
     def save_game(self):
-        if self.is_animation_running:
+        self.sound_manager.play_sound('ui')
+        if self.is_moving or self.is_animation_running:
             return
         if self.selected_button:
             self.selected_button.background_color = [1, 1, 1, 1]
@@ -403,9 +406,12 @@ class MyGameApp(App):
         self.score_label.text = f'{self.score:04d}'
 
     def save_and_exit(self, instance):
-        self.sound_manager.stop_sound('background_music')
-        self.save_game()
-        App.get_running_app().stop()
+        if self.is_moving or self.is_animation_running:
+            return
+        else:
+            self.sound_manager.stop_sound('background_music')
+            self.save_game()
+            App.get_running_app().stop()
 
     def build(self):
         Window.size = (600, 1050)
