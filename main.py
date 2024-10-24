@@ -41,7 +41,10 @@ class MyGameApp(App):
         self.ui = SoundLoader.load('icons/ui_butt.wav')
         self.complete_line = SoundLoader.load('icons/complete_line.wav')
         self.gameover = SoundLoader.load('icons/flatline.wav')
+        self.gameover.volume = 0.4
         self.is_animation_running = False
+        self.background_music = SoundLoader.load('icons/thesong.mp3')
+        self.background_music.volume = 0.4
 
     def create_top_layout(self):
         top_layout = BoxLayout(orientation='horizontal', size_hint_y=0.09, padding=[10, 10, 10, 30], spacing=20)
@@ -182,6 +185,7 @@ class MyGameApp(App):
         if len(line_buttons) >= 5:
             self.increase_score_by(len(line_buttons))
             self.clear_button_colors(line_buttons)
+            self.cleanup_free_spaces()
 
     def check_line_of_same_color(self, button):
         initial_color = button.background_normal
@@ -230,6 +234,7 @@ class MyGameApp(App):
         return line
 
     def clear_button_colors(self, buttons):
+        self.cleanup_free_spaces()
         self.complete_line.play()
         buttons_to_remove = []
 
@@ -243,7 +248,7 @@ class MyGameApp(App):
             anim += Animation(background_color=[1, 1, 1, 0.5], duration=0.3)
             anim.bind(on_complete=lambda anim, value: remove_all_buttons(anim, value))
             anim.start(button)
-        self.cleanup_free_spaces()
+
 
     def remove_button(self, button):
         button.background_normal = ''
@@ -282,6 +287,7 @@ class MyGameApp(App):
                     self.grid_state[btn.row][btn.col] = 0
         if all(all(cell != 0 for cell in row) for row in self.grid_state):
             self.show_game_over_popup()
+            self.cleanup_free_spaces()
 
     def highlight_new_button(self, button):
         self.is_animation_running = True
@@ -406,6 +412,7 @@ class MyGameApp(App):
         self.score_label.text = f'{self.score:04d}'
 
     def save_and_exit(self, instance):
+        self.background_music.stop()
         self.save_game()
         App.get_running_app().stop()
 
@@ -420,6 +427,8 @@ class MyGameApp(App):
         parent.add_widget(main_layout)
         self.load_game()
         self.next_colors = random.sample(COLOR_BUTTONS, 3)
+        self.background_music.play()
+        self.background_music.loop = True
         self.space_info()
         return parent
 if __name__ == '__main__':
