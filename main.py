@@ -12,7 +12,7 @@ from kivy.uix.relativelayout import RelativeLayout
 from kivy.clock import Clock
 from astar import astar
 import json
-from kivy.core.audio import SoundLoader
+from sound import SoundManager
 
 CROWN = 'icons/crown.png'
 COLOR_BUTTONS = ['icons/blue.png', 
@@ -35,17 +35,9 @@ class MyGameApp(App):
         self.is_moving = False
         self.current_colors = []
         self.next_colors = []
-        self.no_path_sound = SoundLoader.load('icons/no_path.wav')
-        self.click_button = SoundLoader.load('icons/click.wav')
-        self.moving_button = SoundLoader.load('icons/move.wav')
-        self.ui = SoundLoader.load('icons/ui_butt.wav')
-        self.complete_line = SoundLoader.load('icons/complete_line.wav')
-        self.gameover = SoundLoader.load('icons/flatline.wav')
-        self.gameover.volume = 0.4
         self.is_animation_running = False
-        self.background_music = SoundLoader.load('icons/thesong.mp3')
-        self.background_music.volume = 0.4
         self.lines_cleared = False
+        self.sound_manager = SoundManager()
 
     def create_top_layout(self):
         top_layout = BoxLayout(orientation='horizontal', size_hint_y=0.09, padding=[10, 10, 10, 30], spacing=20)
@@ -97,12 +89,10 @@ class MyGameApp(App):
         return grid_layout
     
     def on_button_click(self, button):
-        self.click_button.play()
-        self.cleanup_free_spaces()
+        self.sound_manager.play_sound('click_button')
         if self.is_moving or self.is_animation_running:
             return
         if self.selected_button and self.selected_button.background_normal in COLOR_BUTTONS:
-            self.cleanup_free_spaces()
             if self.grid_state[button.row][button.col] == 0:
                 start = (self.selected_button.row, self.selected_button.col)
                 end = (button.row, button.col)
@@ -112,26 +102,23 @@ class MyGameApp(App):
                     self.move_color_button_step_by_step()
                     self.selected_button = None
                 else:
-                    self.no_path_sound.play()
+                    self.sound_manager.play_sound('no_path')
                     print("No free path available")
             else:
                 self.selected_button.background_color = [1, 1, 1, 1]
                 self.selected_button = None
-                self.cleanup_free_spaces()
         if button.background_normal in COLOR_BUTTONS:
             if self.selected_button:
                 self.selected_button.background_color = [1, 1, 1, 1]
             self.selected_button = button
             self.selected_button.background_color = [1.5, 1.5, 1.5, 1]
-            self.cleanup_free_spaces()
         else:
             if self.selected_button:
                 self.selected_button.background_color = [1, 1, 1, 1]
             self.selected_button = None
-            self.cleanup_free_spaces()
 
     def move_color_button_step_by_step(self):
-        self.moving_button.play()
+        self.sound_manager.play_sound('moving_button')
         if not self.is_moving:
             self.is_moving = True
             self.is_animation_running = True
@@ -152,7 +139,6 @@ class MyGameApp(App):
                 self.update_color_buttons()
                 self.assign_random_colors_to_buttons()
             self.lines_cleared = False
-            self.cleanup_free_spaces()
             self.space_info()
 
     def cleanup_free_spaces(self):
@@ -238,7 +224,7 @@ class MyGameApp(App):
 
     def clear_button_colors(self, buttons):
         self.cleanup_free_spaces()
-        self.complete_line.play()
+        self.sound_manager.play_sound('complete_line')
         buttons_to_remove = []
 
         def remove_all_buttons(instance, value):
@@ -304,7 +290,7 @@ class MyGameApp(App):
         self.cleanup_free_spaces()
 
     def show_game_over_popup(self):
-        self.gameover.play()
+        self.sound_manager.play_sound('gameover')
         high_scores = self.get_high_scores()
         best_score = high_scores[0] if high_scores else 0
         content = BoxLayout(orientation='vertical', padding=10, spacing=10)
@@ -336,7 +322,7 @@ class MyGameApp(App):
         self.update_font_size(self.score_label)
 
     def reset_game(self, instance):
-        self.ui.play()
+        self.sound_manager.play_sound('ui')
         if self.is_animation_running:
             return
         self.score = 0
@@ -355,7 +341,8 @@ class MyGameApp(App):
         self.space_info()
 
     def save_game(self):
-        self.ui.play()
+        if self.is_animation_running:
+            return
         if self.selected_button:
             self.selected_button.background_color = [1, 1, 1, 1]
             self.selected_button = None
@@ -390,7 +377,7 @@ class MyGameApp(App):
             print("No saved game")
 
     def get_high_scores(self):
-        self.ui.play()
+        self.sound_manager.play_sound('ui')
         try:
             with open('high_scores.json', 'r') as f:
                 high_scores = json.load(f)
@@ -416,7 +403,7 @@ class MyGameApp(App):
         self.score_label.text = f'{self.score:04d}'
 
     def save_and_exit(self, instance):
-        self.background_music.stop()
+        self.sound_manager.stop_sound('background_music')
         self.save_game()
         App.get_running_app().stop()
 
@@ -431,8 +418,8 @@ class MyGameApp(App):
         parent.add_widget(main_layout)
         self.load_game()
         self.next_colors = random.sample(COLOR_BUTTONS, 3)
-        self.background_music.play()
-        self.background_music.loop = True
+        self.sound_manager.play_sound('background_music')
+        self.sound_manager.set_loop('background_music', True)
         self.space_info()
         return parent
 if __name__ == '__main__':
