@@ -17,11 +17,11 @@ from sound import SoundManager
 CROWN = 'icons/crown.png'
 COLOR_BUTTONS = ['icons/blue.png', 
                  'icons/green.png', 
-                 'icons/orange.png', 
-                 'icons/pink.png', 
-                 'icons/purple.png', 
-                 'icons/turquoise.png', 
-                 'icons/yellow.png', 
+                #  'icons/orange.png', 
+                #  'icons/pink.png', 
+                #  'icons/purple.png', 
+                #  'icons/turquoise.png', 
+                #  'icons/yellow.png', 
                  CROWN]
 BACKGR = 'icons/background.png'
 
@@ -38,6 +38,9 @@ class MyGameApp(App):
         self.is_animation_running = False
         self.lines_cleared = False
         self.sound_manager = SoundManager()
+        self.bomb_uses = 0
+        self.hidden_counter = 0
+        self.bomb_button = None
 
     def create_top_layout(self):
         top_layout = BoxLayout(orientation='horizontal', size_hint_y=0.09, padding=[10, 10, 10, 30], spacing=20)
@@ -64,9 +67,24 @@ class MyGameApp(App):
         return color_grid_layout
 
     def create_color_buttons_layout(self):
-        self.color_buttons_layout = BoxLayout(orientation='horizontal', size_hint_y=0.2, spacing=10, padding=[10, 150, 230, 10])
+        self.color_buttons_layout = BoxLayout(orientation='horizontal',size_hint_x=1.1, size_hint_y=0.2, spacing=10, padding=[10, 150, 230, 10])
         self.update_color_buttons()
+        bomb_button = Button(background_normal='icons/bomb.jpg', size_hint=(None, 1), width=100)
+        bomb_button.bind(on_press=self.use_bomb)
+        bomb_button.disabled = True
+        self.color_buttons_layout.add_widget(bomb_button)
         return self.color_buttons_layout
+    
+    def use_bomb(self, instance):
+        if self.bomb_uses > 0:
+            self.bomb_uses -= 1
+            print(f"Bomb used! Remaining uses: {self.bomb_uses}")
+            self.hidden_counter = 0  
+            if self.bomb_uses <= 0:
+                self.bomb_button.disabled = True
+                print("No bomb uses left. Bomb button disabled.")
+        else:
+            print("No bomb uses available!")
 
     def update_color_buttons(self):
         self.color_buttons_layout.clear_widgets()
@@ -89,8 +107,10 @@ class MyGameApp(App):
         return grid_layout
     
     def on_button_click(self, button):
+        self.cleanup_free_spaces()
         self.sound_manager.play_sound('click_button')
         if self.is_moving or self.is_animation_running:
+            self.cleanup_free_spaces()
             return
         if self.selected_button and self.selected_button.background_normal in COLOR_BUTTONS:
             if self.grid_state[button.row][button.col] == 0:
@@ -101,21 +121,26 @@ class MyGameApp(App):
                     self.move_path = path
                     self.move_color_button_step_by_step()
                     self.selected_button = None
+                    self.cleanup_free_spaces()
                 else:
                     self.sound_manager.play_sound('no_path')
                     print("No free path available")
+                    self.cleanup_free_spaces()
             else:
                 self.selected_button.background_color = [1, 1, 1, 1]
                 self.selected_button = None
+                self.cleanup_free_spaces()
         if button.background_normal in COLOR_BUTTONS:
             if self.selected_button:
                 self.selected_button.background_color = [1, 1, 1, 1]
             self.selected_button = button
             self.selected_button.background_color = [1.5, 1.5, 1.5, 1]
+            self.cleanup_free_spaces()
         else:
             if self.selected_button:
                 self.selected_button.background_color = [1, 1, 1, 1]
             self.selected_button = None
+            self.cleanup_free_spaces()
 
     def move_color_button_step_by_step(self):
         self.sound_manager.play_sound('moving_button')
@@ -150,19 +175,6 @@ class MyGameApp(App):
                         button.background_normal = ''
                         button.background_color = [0, 0, 0, 0.5]
 
-    def create_trail_effect(self, position):
-        button = self.grid_buttons[position[0] * 9 + position[1]]
-        trail_button = Button(
-            background_normal=button.background_normal,
-            background_color=[1, 1, 1, 0.3],
-            size_hint=(0.11, 0.067),
-            pos_hint={"x": button.x / Window.width, "y": button.y / Window.height}
-        )
-        self.root.add_widget(trail_button)
-        Clock.schedule_once(lambda dt: self.remove_trail(trail_button), 0.3)
-
-    def remove_trail(self, trail_button):
-        self.root.remove_widget(trail_button)
 
     def move_color_to_normal_button(self, colored_button, normal_button):
         normal_button.background_normal = colored_button.background_normal
@@ -225,20 +237,19 @@ class MyGameApp(App):
     def clear_button_colors(self, buttons):
         self.cleanup_free_spaces()
         self.sound_manager.play_sound('complete_line')
-        buttons_to_remove = []
+        
+        # Increase score here based on the number of cleared buttons
+        self.increase_score_by(len(buttons))
 
-        def remove_all_buttons(instance, value):
-            for button in buttons_to_remove:
-                self.remove_button(button)
         for button in buttons:
-            buttons_to_remove.append(button)
             button.disabled = True
             self.is_animation_running = True
             anim = Animation(background_color=[1, 1, 0, 1], duration=0.2)
             anim += Animation(background_color=[1, 1, 1, 0.5], duration=0.3)
-            anim.bind(on_complete=lambda anim, value: remove_all_buttons(anim, value))
-            anim.bind(on_complete=self.animation_complete)
             anim.start(button)
+
+        # Call remove_all_buttons after the animation completes
+        anim.bind(on_complete=self.animation_complete)
 
 
     def remove_button(self, button):
@@ -247,12 +258,6 @@ class MyGameApp(App):
         self.grid_state[button.row][button.col] = 0
         button.disabled = False
 
-    def space_info(self):
-        spaces = sum(row.count(0) for row in self.grid_state)
-        print(spaces)
-        for row in self.grid_state:
-            print(row)
-        print("============================")
 
     def check_for_free_pos(self):
         return [button for button in self.grid_buttons if self.grid_state[button.row][button.col] == 0]
@@ -279,6 +284,31 @@ class MyGameApp(App):
         if all(all(cell != 0 for cell in row) for row in self.grid_state):
             self.show_game_over_popup()
             self.cleanup_free_spaces()
+
+
+
+
+
+    def create_trail_effect(self, position):
+        button = self.grid_buttons[position[0] * 9 + position[1]]
+        trail_button = Button(
+            background_normal=button.background_normal,
+            background_color=[1, 1, 1, 0.3],
+            size_hint=(0.11, 0.067),
+            pos_hint={"x": button.x / Window.width, "y": button.y / Window.height}
+        )
+        self.root.add_widget(trail_button)
+        Clock.schedule_once(lambda dt: self.remove_trail(trail_button), 0.3)
+
+    def remove_trail(self, trail_button):
+        self.root.remove_widget(trail_button)
+
+    def space_info(self):
+        spaces = sum(row.count(0) for row in self.grid_state)
+        print(spaces)
+        for row in self.grid_state:
+            print(row)
+        print("============================")
 
     def highlight_new_button(self, button):
         self.is_animation_running = True
@@ -307,14 +337,16 @@ class MyGameApp(App):
         restart_button.bind(on_press=lambda *args: (self.reset_game(None), popup.dismiss()))
         popup.open()
 
-
     def increase_score_by(self, count):
         self.score += count
         self.score_label.text = f'{self.score:04d}'
-
-    def increase_score(self, instance):
-        self.score += 1
-        self.score_label.text = f'{self.score:04d}'
+        while self.hidden_counter >= 15:
+            self.bomb_uses += 1
+            self.hidden_counter -= 15
+            print(f"Bomb uses available: {self.bomb_uses}")
+            print(f"Hidden counter: {self.hidden_counter}")
+            if self.bomb_button.disabled:
+                self.bomb_button.disabled = False
 
     def update_font_size(self, label):
         window_height = Window.size[1]
@@ -330,14 +362,18 @@ class MyGameApp(App):
         self.score = 0
         self.score_label.text = '0000'
         self.grid_state = [[0 for _ in range(9)] for _ in range(9)]
+        
         if self.selected_button:
             self.selected_button.background_color = [1, 1, 1, 1]
             self.selected_button = None
+
         for button in self.grid_buttons:
             button.background_normal = ''
             button.background_color = [0, 0, 0, 0.5]
-        self.next_colors = random.sample(COLOR_BUTTONS, 3)
+
         self.update_color_buttons()
+        self.bomb_uses = 0  # Reset bomb uses to 0 on restart
+        self.bomb_button.disabled = True  # Disable bomb button at the start
         self.assign_random_colors_to_buttons()
         self.cleanup_free_spaces()
         self.space_info()
@@ -360,7 +396,6 @@ class MyGameApp(App):
             'score': self.score,
             'high_scores': self.get_high_scores()
         }
-        
         with open('game_save.json', 'w') as f:
             json.dump(game_state, f)
 
@@ -412,6 +447,9 @@ class MyGameApp(App):
             self.sound_manager.stop_sound('background_music')
             self.save_game()
             App.get_running_app().stop()
+
+
+
 
     def build(self):
         Window.size = (600, 1050)
