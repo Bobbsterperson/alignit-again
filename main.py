@@ -45,6 +45,7 @@ class MyGameApp(App):
         self.is_animation_running = False
         self.background_music = SoundLoader.load('icons/thesong.mp3')
         self.background_music.volume = 0.4
+        self.lines_cleared = False
 
     def create_top_layout(self):
         top_layout = BoxLayout(orientation='horizontal', size_hint_y=0.09, padding=[10, 10, 10, 30], spacing=20)
@@ -101,6 +102,7 @@ class MyGameApp(App):
         if self.is_moving or self.is_animation_running:
             return
         if self.selected_button and self.selected_button.background_normal in COLOR_BUTTONS:
+            self.cleanup_free_spaces()
             if self.grid_state[button.row][button.col] == 0:
                 start = (self.selected_button.row, self.selected_button.col)
                 end = (button.row, button.col)
@@ -115,15 +117,18 @@ class MyGameApp(App):
             else:
                 self.selected_button.background_color = [1, 1, 1, 1]
                 self.selected_button = None
+                self.cleanup_free_spaces()
         if button.background_normal in COLOR_BUTTONS:
             if self.selected_button:
                 self.selected_button.background_color = [1, 1, 1, 1]
             self.selected_button = button
             self.selected_button.background_color = [1.5, 1.5, 1.5, 1]
+            self.cleanup_free_spaces()
         else:
             if self.selected_button:
                 self.selected_button.background_color = [1, 1, 1, 1]
             self.selected_button = None
+            self.cleanup_free_spaces()
 
     def move_color_button_step_by_step(self):
         self.moving_button.play()
@@ -138,16 +143,17 @@ class MyGameApp(App):
         self.move_color_to_normal_button(colored_button, normal_button)
         if len(self.move_path) > 1:
             Clock.schedule_once(lambda dt: self.move_color_button_step_by_step(), 0.1)
-            
         else:
             self.is_moving = False
             self.is_animation_running = False
-            self.next_colors = self.current_colors
-            self.update_color_buttons()
-            self.assign_random_colors_to_buttons()
+            self.check_line_of_same_color(normal_button)
+            if not self.lines_cleared:
+                self.next_colors = self.current_colors
+                self.update_color_buttons()
+                self.assign_random_colors_to_buttons()
+            self.lines_cleared = False
             self.cleanup_free_spaces()
             self.space_info()
-
 
     def cleanup_free_spaces(self):
         for row in range(9):
@@ -181,11 +187,6 @@ class MyGameApp(App):
         colored_button.background_normal = ''
         colored_button.background_down = ''
         colored_button.background_color = [0, 0, 0, 0.5]
-        line_buttons = self.check_line_of_same_color(normal_button)
-        if len(line_buttons) >= 5:
-            self.increase_score_by(len(line_buttons))
-            self.clear_button_colors(line_buttons)
-            self.cleanup_free_spaces()
 
     def check_line_of_same_color(self, button):
         initial_color = button.background_normal
@@ -200,6 +201,8 @@ class MyGameApp(App):
                     all_line_positions.update(line)
         if all_line_positions:
             self.clear_button_colors(all_line_positions)
+            self.lines_cleared = True
+        self.cleanup_free_spaces()
         return list(all_line_positions)
 
     def get_direction_vectors(self):
@@ -298,6 +301,7 @@ class MyGameApp(App):
 
     def animation_complete(self, animation, widget):
         self.is_animation_running = False
+        self.cleanup_free_spaces()
 
     def show_game_over_popup(self):
         self.gameover.play()
