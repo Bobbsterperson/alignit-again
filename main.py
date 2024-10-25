@@ -15,15 +15,15 @@ import json
 from sound import SoundManager
 
 
-SCORE_NEEDED_FOR_BOMB = 40
+SCORE_NEEDED_FOR_BOMB = 10
 CROWN = 'icons/crown.png'
 COLOR_BUTTONS = ['icons/blue.png', 
                  'icons/green.png', 
-                 'icons/orange.png', 
-                 'icons/pink.png', 
-                 'icons/purple.png', 
-                 'icons/turquoise.png', 
-                 'icons/yellow.png', 
+                #  'icons/orange.png', 
+                #  'icons/pink.png', 
+                #  'icons/purple.png', 
+                #  'icons/turquoise.png', 
+                #  'icons/yellow.png', 
                  CROWN]
 BACKGR = 'icons/background.png'
 
@@ -79,11 +79,12 @@ class MyGameApp(App):
                 for i in range(max(0, row - 1), min(9, row + 2)):
                     for j in range(max(0, col - 1), min(9, col + 2)):
                         affected_buttons.append(self.grid_buttons[i * 9 + j])
+                self.sound_manager.play_sound('bomb')
+                self.bomb_visual_effect(affected_buttons)
                 for button in affected_buttons:
                     button.background_normal = ''
                     button.background_color = [0, 0, 0, 0.5]
                     self.grid_state[button.row][button.col] = 0
-                self.sound_manager.play_sound('bomb_explosion')
                 self.selected_button.background_color = [1, 1, 1, 1]
                 self.selected_button = None
                 self.cleanup_free_spaces()
@@ -92,6 +93,20 @@ class MyGameApp(App):
                 print("No bomb uses left!")
         else:
             print("No button selected to use the bomb.")
+
+
+    def bomb_visual_effect(self, affected_buttons):
+        for button in affected_buttons:
+            original_scale = button.size_hint[:]
+            scale_up = Animation(size_hint=(1.2, 1.2), duration=0.1)
+            scale_down = Animation(size_hint=original_scale, duration=0.1)
+            color_change = Animation(background_color=(1, 0, 0, 1), duration=0.1) + Animation(background_color=(0, 0, 0, 0.5), duration=0.2)
+            scale_up.start(button)
+            scale_down.start(button)
+            color_change.start(button)
+            
+    def remove_explosion(self, explosion):
+        self.root.remove_widget(explosion)
 
     def update_bomb_button_state(self):
         if hasattr(self, 'bomb_button'):
