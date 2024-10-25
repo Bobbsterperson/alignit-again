@@ -13,7 +13,7 @@ from kivy.clock import Clock
 from astar import astar
 import json
 from sound import SoundManager
-from game_logic import check_direction
+from game_logic import GameLogic
 from constants import *
 
 class MyGameApp(App):
@@ -31,6 +31,7 @@ class MyGameApp(App):
         self.sound_manager = SoundManager()
         self.bomb_uses = 0
         self.need = 0
+        self.game_logic = GameLogic(self.grid_buttons, self.sound_manager)
 
     def create_top_layout(self):
         top_layout = BoxLayout(orientation='horizontal', size_hint_y=0.09, padding=[10, 10, 10, 30], spacing=20)
@@ -244,7 +245,7 @@ class MyGameApp(App):
         directions = self.get_direction_vectors()
         for direction, vectors in directions.items():
             for color_to_check in COLOR_BUTTONS:
-                line = check_direction(button, vectors, initial_color, color_to_check, self.grid_buttons)
+                line = self.game_logic.check_direction(button, vectors, initial_color, color_to_check)
                 if len(line) >= 5:
                     all_line_positions.update(line)
         self.increase_score_by(len(all_line_positions))
@@ -261,7 +262,6 @@ class MyGameApp(App):
             "diagonal1": [(-1, -1), (1, 1)],
             "diagonal2": [(-1, 1), (1, -1)]
         }
-
 
     def clear_button_colors(self, buttons):
         self.cleanup_free_spaces()
