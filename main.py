@@ -15,15 +15,15 @@ import json
 from sound import SoundManager
 
 
-SCORE_NEEDED_FOR_BOMB = 10
+SCORE_NEEDED_FOR_BOMB = 40
 CROWN = 'icons/crown.png'
 COLOR_BUTTONS = ['icons/blue.png', 
                  'icons/green.png', 
-                #  'icons/orange.png', 
-                #  'icons/pink.png', 
-                #  'icons/purple.png', 
-                #  'icons/turquoise.png', 
-                #  'icons/yellow.png', 
+                 'icons/orange.png', 
+                 'icons/pink.png', 
+                 'icons/purple.png', 
+                 'icons/turquoise.png', 
+                 'icons/yellow.png', 
                  CROWN]
 BACKGR = 'icons/background.png'
 
@@ -485,12 +485,40 @@ class MyGameApp(App):
                 json.dump(high_scores, f)
         return high_scores
 
+
     def show_high_scores_popup(self, instance):
         high_scores = self.get_high_scores()
-        score_text = "\n".join([f"{i+1}. {score}" for i, score in enumerate(high_scores)])
-        content = Label(text=score_text, halign="center", valign="middle", font_size='60sp')
-        content.bind(size=content.setter('text_size'))
-        popup = Popup(title='High Scores', content=content, size_hint=(0.5, 0.5))
+        last_five_scores = high_scores[-5:] if len(high_scores) > 5 else high_scores
+        score_text = "\n".join([f"{i + 1}. {score}" for i, score in enumerate(last_five_scores)])
+        content_layout = BoxLayout(orientation='vertical', padding=10, spacing=10)
+        score_label = Label(text=score_text, halign="center", valign="middle", font_size='40sp')
+        score_label.bind(size=score_label.setter('text_size'))
+        content_layout.add_widget(score_label)
+        mute_button = Button(size_hint=(1, 0.2))
+        bomb_button = Button(text="Bomb Off", size_hint=(1, 0.2))
+        if not hasattr(self, 'sound_manager'):
+            self.sound_manager = SoundManager()
+        if self.sound_manager.is_muted:
+            mute_button.text = "Unmute"
+        else:
+            mute_button.text = "Mute"
+
+        def toggle_mute(instance):
+            self.sound_manager.toggle_mute()
+            if self.sound_manager.is_muted:
+                mute_button.text = "Unmute"
+            else:
+                mute_button.text = "Mute"
+                self.sound_manager.play_background_music()
+
+        def toggle_bomb(instance):
+            print("Bomb toggled")
+
+        mute_button.bind(on_press=toggle_mute)
+        bomb_button.bind(on_press=toggle_bomb)
+        content_layout.add_widget(mute_button)
+        content_layout.add_widget(bomb_button)
+        popup = Popup(title='High Scores', content=content_layout, size_hint=(0.5, 0.5))
         popup.open()
 
     def update_score_label(self):
@@ -516,7 +544,6 @@ class MyGameApp(App):
         self.load_game()
         self.next_colors = random.sample(COLOR_BUTTONS, 3)
         self.sound_manager.play_sound('background_music')
-        self.sound_manager.set_loop('background_music', True)
         self.space_info()
         return parent
 if __name__ == '__main__':
