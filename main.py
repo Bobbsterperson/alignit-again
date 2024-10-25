@@ -14,14 +14,16 @@ from astar import astar
 import json
 from sound import SoundManager
 
+
+score_needed_for_bomb = 40
 CROWN = 'icons/crown.png'
 COLOR_BUTTONS = ['icons/blue.png', 
                  'icons/green.png', 
-                #  'icons/orange.png', 
-                #  'icons/pink.png', 
-                #  'icons/purple.png', 
-                #  'icons/turquoise.png', 
-                #  'icons/yellow.png', 
+                 'icons/orange.png', 
+                 'icons/pink.png', 
+                 'icons/purple.png', 
+                 'icons/turquoise.png', 
+                 'icons/yellow.png', 
                  CROWN]
 BACKGR = 'icons/background.png'
 
@@ -38,6 +40,8 @@ class MyGameApp(App):
         self.is_animation_running = False
         self.lines_cleared = False
         self.sound_manager = SoundManager()
+        self.bomb_uses = 0
+        self.need = 0
 
     def create_top_layout(self):
         top_layout = BoxLayout(orientation='horizontal', size_hint_y=0.09, padding=[10, 10, 10, 30], spacing=20)
@@ -57,9 +61,6 @@ class MyGameApp(App):
     
     def create_the_layouts(self):
         color_buttons_layout = self.create_color_buttons_layout()
-        bomb_button = Button(background_normal='icons/bomb.jpg', size_hint=(0.1, 1))
-        bomb_button.bind(on_press=self.use_bomb)
-        color_buttons_layout.add_widget(bomb_button)
         grid_layout = self.create_grid_layout()
         color_grid_layout = BoxLayout(orientation='vertical', size_hint=(1, 0.6))
         color_grid_layout.add_widget(color_buttons_layout)
@@ -69,34 +70,32 @@ class MyGameApp(App):
 
     def use_bomb(self, instance):
         if self.selected_button:
-            # Clear the selected button and adjacent buttons
-            row = self.selected_button.row
-            col = self.selected_button.col
-            affected_buttons = []
-
-            # Get buttons in a 3x3 grid around the selected button
-            for i in range(max(0, row - 1), min(9, row + 2)):
-                for j in range(max(0, col - 1), min(9, col + 2)):
-                    affected_buttons.append(self.grid_buttons[i * 9 + j])
-
-            # Clear the buttons and reset grid state
-            for button in affected_buttons:
-                button.background_normal = ''
-                button.background_color = [0, 0, 0, 0.5]
-                self.grid_state[button.row][button.col] = 0
-
-            # Play a sound for the bomb effect
-            self.sound_manager.play_sound('bomb_explosion')
-
-            # Reset the selected button
-            self.selected_button.background_color = [1, 1, 1, 1]
-            self.selected_button = None
-
-            # Update the UI and available spaces
-            self.cleanup_free_spaces()
-            self.space_info()
+            if self.bomb_uses > 0:
+                self.bomb_uses -= 1
+                self.update_bomb_button_state()
+                row = self.selected_button.row
+                col = self.selected_button.col
+                affected_buttons = []
+                for i in range(max(0, row - 1), min(9, row + 2)):
+                    for j in range(max(0, col - 1), min(9, col + 2)):
+                        affected_buttons.append(self.grid_buttons[i * 9 + j])
+                for button in affected_buttons:
+                    button.background_normal = ''
+                    button.background_color = [0, 0, 0, 0.5]
+                    self.grid_state[button.row][button.col] = 0
+                self.sound_manager.play_sound('bomb_explosion')
+                self.selected_button.background_color = [1, 1, 1, 1]
+                self.selected_button = None
+                self.cleanup_free_spaces()
+                self.space_info()
+            else:
+                print("No bomb uses left!")
         else:
             print("No button selected to use the bomb.")
+
+    def update_bomb_button_state(self):
+        if hasattr(self, 'bomb_button'):
+            self.bomb_button.disabled = self.bomb_uses <= 0
 
     def create_color_buttons_layout(self):
         self.color_buttons_layout = BoxLayout(orientation='horizontal', size_hint_y=0.2, spacing=10, padding=[10, 150, 230, 10])
@@ -109,6 +108,10 @@ class MyGameApp(App):
         for color in self.current_colors:
             color_button = Button(background_normal=color, size_hint=(0.1, 1))
             self.color_buttons_layout.add_widget(color_button)
+        self.bomb_button = Button(background_normal='icons/bomb.jpg', size_hint=(0.1, 1))
+        self.bomb_button.bind(on_press=self.use_bomb)
+        self.color_buttons_layout.add_widget(self.bomb_button)
+        self.update_bomb_button_state()
 
     def create_grid_layout(self):
         grid_layout = GridLayout(cols=9, rows=9, size_hint=(1, 0.5), spacing=4)
@@ -349,10 +352,20 @@ class MyGameApp(App):
         restart_button.bind(on_press=lambda *args: (self.reset_game(None), popup.dismiss()))
         popup.open()
 
-
     def increase_score_by(self, count):
         self.score += count
         self.score_label.text = f'{self.score:04d}'
+        self.check_score_for_bomb(count)
+
+    def check_score_for_bomb(self, count):
+        self.need += count
+        if self.need >= score_needed_for_bomb:
+            self.bomb_uses += 1
+            self.need -= score_needed_for_bomb
+            self.update_bomb_button_state()
+        print(count)
+        print(self.need)
+        print(self.bomb_uses)
 
     def update_font_size(self, label):
         window_height = Window.size[1]
@@ -376,10 +389,10 @@ class MyGameApp(App):
             button.background_color = [0, 0, 0, 0.5]
         self.color_buttons_layout.clear_widgets()
         self.update_color_buttons()
-        bomb_button = Button(background_normal='icons/bomb.jpg', size_hint=(0.1, 1))
-        bomb_button.bind(on_press=self.use_bomb)
-        self.color_buttons_layout.add_widget(bomb_button)
         self.next_colors = random.sample(COLOR_BUTTONS, 3)
+        self.bomb_uses = 0
+        self.need = 0
+        self.update_bomb_button_state()
         self.assign_random_colors_to_buttons()
         self.cleanup_free_spaces()
         self.space_info()
@@ -401,9 +414,10 @@ class MyGameApp(App):
                 } for button in self.grid_buttons
             ],
             'score': self.score,
-            'high_scores': self.get_high_scores()
+            'high_scores': self.get_high_scores(),
+            'bomb_uses': self.bomb_uses,
+            'need': self.need
         }
-        
         with open('game_save.json', 'w') as f:
             json.dump(game_state, f)
 
@@ -416,7 +430,10 @@ class MyGameApp(App):
                 self.update_score_label()
                 for button, button_state in zip(self.grid_buttons, game_state['button_states']):
                     button.background_normal = button_state['image']
-                    button.background_color = button_state['opacity'] 
+                    button.background_color = button_state['opacity']
+                self.bomb_uses = game_state.get('bomb_uses', 0)
+                self.need = game_state.get('need', 0)
+                self.update_bomb_button_state()
                 self.space_info()
         except FileNotFoundError:
             self.assign_random_colors_to_buttons()
@@ -434,7 +451,6 @@ class MyGameApp(App):
             high_scores = sorted(set(high_scores), reverse=True)[:5]
             with open('high_scores.json', 'w') as f:
                 json.dump(high_scores, f)
-
         return high_scores
 
     def show_high_scores_popup(self, instance):
