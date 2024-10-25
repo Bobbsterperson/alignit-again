@@ -13,19 +13,8 @@ from kivy.clock import Clock
 from astar import astar
 import json
 from sound import SoundManager
-
-
-SCORE_NEEDED_FOR_BOMB = 40
-CROWN = 'icons/crown.png'
-COLOR_BUTTONS = ['icons/blue.png', 
-                 'icons/green.png', 
-                 'icons/orange.png', 
-                 'icons/pink.png', 
-                 'icons/purple.png', 
-                 'icons/turquoise.png', 
-                 'icons/yellow.png', 
-                 CROWN]
-BACKGR = 'icons/background.png'
+from game_logic import check_direction
+from constants import *
 
 class MyGameApp(App):
     def __init__(self, **kwargs):
@@ -255,7 +244,7 @@ class MyGameApp(App):
         directions = self.get_direction_vectors()
         for direction, vectors in directions.items():
             for color_to_check in COLOR_BUTTONS:
-                line = self.check_direction(button, vectors, initial_color, color_to_check)
+                line = check_direction(button, vectors, initial_color, color_to_check, self.grid_buttons)
                 if len(line) >= 5:
                     all_line_positions.update(line)
         self.increase_score_by(len(all_line_positions))
@@ -273,28 +262,6 @@ class MyGameApp(App):
             "diagonal2": [(-1, 1), (1, -1)]
         }
 
-    def check_direction(self, button, vectors, initial_color, color_to_check):
-        line = [button]
-        current_color = initial_color if initial_color != CROWN else color_to_check
-        for dx, dy in vectors:
-            row, col = button.row, button.col
-            while True:
-                row += dx
-                col += dy
-                if 0 <= row < 9 and 0 <= col < 9:
-                    adjacent_button = self.grid_buttons[row * 9 + col]
-                    adjacent_color = adjacent_button.background_normal
-
-                    if adjacent_color == current_color or adjacent_color == CROWN:
-                        line.append(adjacent_button)
-                    elif current_color == CROWN and adjacent_color in COLOR_BUTTONS:
-                        line.append(adjacent_button)
-                        current_color = adjacent_color
-                    else:
-                        break
-                else:
-                    break
-        return line
 
     def clear_button_colors(self, buttons):
         self.cleanup_free_spaces()
