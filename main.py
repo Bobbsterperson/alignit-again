@@ -15,7 +15,7 @@ import json
 from sound import SoundManager
 
 
-score_needed_for_bomb = 40
+SCORE_NEEDED_FOR_BOMB = 40
 CROWN = 'icons/crown.png'
 COLOR_BUTTONS = ['icons/blue.png', 
                  'icons/green.png', 
@@ -98,19 +98,31 @@ class MyGameApp(App):
             self.bomb_button.disabled = self.bomb_uses <= 0
 
     def create_color_buttons_layout(self):
-        self.color_buttons_layout = BoxLayout(orientation='horizontal', size_hint_y=0.2, spacing=10, padding=[10, 150, 230, 10])
+        self.color_buttons_layout = BoxLayout(orientation='horizontal', size_hint_y=0.2, spacing=10, padding=[10, 150, 10, 10])
         self.update_color_buttons()
         return self.color_buttons_layout
 
     def update_color_buttons(self):
         self.color_buttons_layout.clear_widgets()
         self.current_colors = random.sample(COLOR_BUTTONS, 3)
+        buttons_layout = BoxLayout(orientation='horizontal', size_hint=(1, 1), spacing=10)
         for color in self.current_colors:
-            color_button = Button(background_normal=color, size_hint=(0.1, 1))
-            self.color_buttons_layout.add_widget(color_button)
-        self.bomb_button = Button(background_normal='icons/bomb.jpg', size_hint=(0.1, 1))
+            color_button = Button(background_normal=color, size_hint=(0.5, 1), width=100)
+            buttons_layout.add_widget(color_button)  
+        self.bomb_button = Button(background_normal='icons/bomb.jpg', size_hint=(0.5, 1), width=100)
         self.bomb_button.bind(on_press=self.use_bomb)
-        self.color_buttons_layout.add_widget(self.bomb_button)
+        buttons_layout.add_widget(self.bomb_button)
+        self.color_buttons_layout.add_widget(buttons_layout)
+        self.bomb_info_label = Label(
+            text=f'{SCORE_NEEDED_FOR_BOMB - self.need}', 
+            font_size='70sp', 
+            size_hint=(0.3, 1), 
+            height=50,
+            halign='right', 
+            valign='middle',
+            padding=(10, 0)
+        )
+        self.color_buttons_layout.add_widget(self.bomb_info_label)
         self.update_bomb_button_state()
 
     def create_grid_layout(self):
@@ -127,6 +139,8 @@ class MyGameApp(App):
         return grid_layout
     
     def on_button_click(self, button):
+        print(self.bomb_uses)
+        self.update_bomb_button_state()
         self.cleanup_free_spaces()
         self.sound_manager.play_sound('click_button')
         if self.is_moving or self.is_animation_running:
@@ -352,20 +366,21 @@ class MyGameApp(App):
         restart_button.bind(on_press=lambda *args: (self.reset_game(None), popup.dismiss()))
         popup.open()
 
+    def update_bomb_info_label(self):
+        self.bomb_info_label.text = f'{SCORE_NEEDED_FOR_BOMB - self.need}'
+
     def increase_score_by(self, count):
         self.score += count
         self.score_label.text = f'{self.score:04d}'
         self.check_score_for_bomb(count)
+        self.update_bomb_info_label()
 
     def check_score_for_bomb(self, count):
         self.need += count
-        if self.need >= score_needed_for_bomb:
+        if self.need >= SCORE_NEEDED_FOR_BOMB:
             self.bomb_uses += 1
-            self.need -= score_needed_for_bomb
+            self.need -= SCORE_NEEDED_FOR_BOMB
             self.update_bomb_button_state()
-        print(count)
-        print(self.need)
-        print(self.bomb_uses)
 
     def update_font_size(self, label):
         window_height = Window.size[1]
@@ -433,7 +448,9 @@ class MyGameApp(App):
                     button.background_color = button_state['opacity']
                 self.bomb_uses = game_state.get('bomb_uses', 0)
                 self.need = game_state.get('need', 0)
+                self.update_bomb_info_label()
                 self.update_bomb_button_state()
+                self.check_score_for_bomb(0)
                 self.space_info()
         except FileNotFoundError:
             self.assign_random_colors_to_buttons()
