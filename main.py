@@ -367,7 +367,8 @@ class MyGameApp(App):
             'score': self.score,
             'high_scores': self.get_high_scores(),
             'bomb_uses': self.bomb_uses,
-            'need': self.need
+            'need': self.need,
+            'bomb_disabled': self.bomb_disabled
         }
         with open('game_save.json', 'w') as f:
             json.dump(game_state, f)
@@ -384,6 +385,7 @@ class MyGameApp(App):
                     button.background_color = button_state['opacity']
                 self.bomb_uses = game_state.get('bomb_uses', 0)
                 self.need = game_state.get('need', 0)
+                self.bomb_disabled = game_state.get('bomb_disabled', False)
                 self.update_bomb_info_label()
                 self.update_bomb_button_state()
                 self.check_score_for_bomb(0)
