@@ -4,12 +4,14 @@ from sound import SoundManager
 from game_logic import GameLogic
 import random
 from constants import *
+from bomb import Bomb
 
 class GameLoader:
     def __init__(self, game):
         self.game = game
         self.sound_manager = SoundManager()
         self.game_logic = GameLogic(self.game)
+        self.bomb = Bomb(self.game)
 
     def save_game(self):
         self.game.sound_manager.play_sound('ui')
@@ -30,7 +32,8 @@ class GameLoader:
             'high_scores': self.game_logic.get_high_scores(),
             'bomb_uses': self.game.bomb_uses,
             'need': self.game.need,
-            'bomb_disabled': self.game.bomb_disabled
+            'bomb_disabled': self.game.bomb_disabled,
+            'muted': self.game.sound_manager.is_muted
         }
         with open('game_save.json', 'w') as f:
             json.dump(game_state, f)
@@ -48,8 +51,9 @@ class GameLoader:
                 self.game.bomb_uses = game_state.get('bomb_uses', 0)
                 self.game.need = game_state.get('need', 0)
                 self.game.bomb_disabled = game_state.get('bomb_disabled', False)
+                self.game.sound_manager.is_muted = game_state.get('muted', False)
                 self.game.update_bomb_info_label()
-                self.game.update_bomb_button_state()
+                self.bomb.update_bomb_button_state()
                 self.game.check_score_for_bomb(0)
                 self.game.space_info()
         except FileNotFoundError:
@@ -72,8 +76,8 @@ class GameLoader:
         self.game.score_label.text = '0000'
         self.game.grid_state = [[0 for _ in range(9)] for _ in range(9)]
         if self.game.selected_button:
-            self.selected_button.background_color = [1, 1, 1, 1]
-            self.selected_button = None
+            self.game.selected_button.background_color = [1, 1, 1, 1]
+            self.game.selected_button = None
         for button in self.game.grid_buttons:
             button.background_normal = ''
             button.background_color = [0, 0, 0, 0.5]
@@ -82,7 +86,7 @@ class GameLoader:
         self.game.next_colors = random.sample(COLOR_BUTTONS, 3)
         self.game.bomb_uses = 0
         self.game.need = 0
-        self.game.update_bomb_button_state()
+        self.bomb.update_bomb_button_state()
         self.game.assign_random_colors_to_buttons()
         self.game_logic.cleanup_free_spaces()
         self.game.space_info()

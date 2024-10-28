@@ -20,7 +20,6 @@ class GameLogic:
                 if 0 <= row < 9 and 0 <= col < 9:
                     adjacent_button = self.game.grid_buttons[row * 9 + col]
                     adjacent_color = adjacent_button.background_normal
-
                     if adjacent_color == current_color or adjacent_color == CROWN:
                         line.append(adjacent_button)
                     elif current_color == CROWN and adjacent_color in COLOR_BUTTONS:

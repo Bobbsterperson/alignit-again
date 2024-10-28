@@ -11,12 +11,12 @@ from kivy.uix.image import Image
 from kivy.uix.relativelayout import RelativeLayout
 from kivy.clock import Clock
 from astar import astar
-import json
 from sound import SoundManager
 from game_logic import GameLogic
 from constants import *
 from movement import Movement
 from save_load import GameLoader
+from bomb import Bomb
 
 class MyGameApp(App):
     def __init__(self, **kwargs):
@@ -33,6 +33,7 @@ class MyGameApp(App):
         self.sound_manager = SoundManager()
         self.bomb_uses = 0
         self.need = 0
+        self.bomb = Bomb(self)
         self.game_logic = GameLogic(self)
         self.movement = Movement(self)
         self.bomb_disabled = False
@@ -62,51 +63,6 @@ class MyGameApp(App):
         color_grid_layout.add_widget(grid_layout)
         return color_grid_layout
     
-
-    def use_bomb(self, instance):
-        if self.selected_button:
-            if self.bomb_uses > 0:
-                self.bomb_uses -= 1
-                self.update_bomb_button_state()
-                row = self.selected_button.row
-                col = self.selected_button.col
-                affected_buttons = []
-                for i in range(max(0, row - 1), min(9, row + 2)):
-                    for j in range(max(0, col - 1), min(9, col + 2)):
-                        affected_buttons.append(self.grid_buttons[i * 9 + j])
-                self.sound_manager.play_sound('bomb')
-                self.bomb_visual_effect(affected_buttons)
-                for button in affected_buttons:
-                    button.background_normal = ''
-                    button.background_color = [0, 0, 0, 0.5]
-                    self.grid_state[button.row][button.col] = 0
-                self.selected_button.background_color = [1, 1, 1, 1]
-                self.selected_button = None
-                self.game_logic.cleanup_free_spaces()
-                self.space_info()
-            else:
-                print("No bomb uses left!")
-        else:
-            print("No button selected to use the bomb.")
-
-
-    def bomb_visual_effect(self, affected_buttons):
-        for button in affected_buttons:
-            original_scale = button.size_hint[:]
-            scale_up = Animation(size_hint=(1.2, 1.2), duration=0.1)
-            scale_down = Animation(size_hint=original_scale, duration=0.1)
-            color_change = Animation(background_color=(1, 0, 0, 1), duration=0.1) + Animation(background_color=(0, 0, 0, 0.5), duration=0.2)
-            scale_up.start(button)
-            scale_down.start(button)
-            color_change.start(button)
-            
-    def remove_explosion(self, explosion):
-        self.root.remove_widget(explosion)
-
-    def update_bomb_button_state(self):
-        if hasattr(self, 'bomb_button'):
-            self.bomb_button.disabled = self.bomb_disabled or self.bomb_uses <= 0
-
     def create_color_buttons_layout(self):
         self.color_buttons_layout = BoxLayout(orientation='horizontal', size_hint_y=0.2, spacing=10, padding=[10, 150, 10, 10])
         self.update_color_buttons()
@@ -120,7 +76,7 @@ class MyGameApp(App):
             color_button = Button(background_normal=color, size_hint=(0.5, 1), width=100)
             buttons_layout.add_widget(color_button)  
         self.bomb_button = Button(background_normal='icons/bomb.jpg', size_hint=(0.5, 1), width=100)
-        self.bomb_button.bind(on_press=self.use_bomb)
+        self.bomb_button.bind(on_press=self.bomb.use_bomb)
         buttons_layout.add_widget(self.bomb_button)
         self.color_buttons_layout.add_widget(buttons_layout)
         self.bomb_info_label = Label(
@@ -133,7 +89,7 @@ class MyGameApp(App):
             padding=(10, 0)
         )
         self.color_buttons_layout.add_widget(self.bomb_info_label)
-        self.update_bomb_button_state()
+        self.bomb.update_bomb_button_state()
 
     def create_grid_layout(self):
         grid_layout = GridLayout(cols=9, rows=9, size_hint=(1, 0.5), spacing=4)
@@ -150,7 +106,7 @@ class MyGameApp(App):
     
     def on_button_click(self, button):
         print(self.bomb_uses)
-        self.update_bomb_button_state()
+        self.bomb.update_bomb_button_state()
         self.game_logic.cleanup_free_spaces()
         self.sound_manager.play_sound('click_button')
         if self.is_moving or self.is_animation_running:
@@ -303,14 +259,14 @@ class MyGameApp(App):
 
     def update_bomb_info_label(self):
         self.bomb_info_label.text = f'{SCORE_NEEDED_FOR_BOMB - self.need}' if not self.bomb_disabled else ""
-        self.update_bomb_button_state()
+        self.bomb.update_bomb_button_state()
 
     def check_score_for_bomb(self, count):
         self.need += count
         if self.need >= SCORE_NEEDED_FOR_BOMB:
             self.bomb_uses += 1
             self.need -= SCORE_NEEDED_FOR_BOMB
-            self.update_bomb_button_state()
+            self.bomb.update_bomb_button_state()
 
     def show_high_scores_popup(self, instance):
         high_scores = self.game_logic.get_high_scores()
@@ -340,7 +296,7 @@ class MyGameApp(App):
         def toggle_bomb(instance):
             self.bomb_disabled = not self.bomb_disabled
             bomb_button.text = "Bomb Off" if not self.bomb_disabled else "Bomb On"
-            self.update_bomb_button_state()
+            self.bomb.update_bomb_button_state()
             self.update_bomb_info_label()
 
         mute_button.bind(on_press=toggle_mute)
