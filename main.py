@@ -15,6 +15,7 @@ import json
 from sound import SoundManager
 from game_logic import GameLogic
 from constants import *
+from movement import Movement
 
 class MyGameApp(App):
     def __init__(self, **kwargs):
@@ -32,6 +33,7 @@ class MyGameApp(App):
         self.bomb_uses = 0
         self.need = 0
         self.game_logic = GameLogic(self.grid_buttons, self.sound_manager)
+        self.movement = Movement(self)
 
     def create_top_layout(self):
         top_layout = BoxLayout(orientation='horizontal', size_hint_y=0.09, padding=[10, 10, 10, 30], spacing=20)
@@ -157,7 +159,7 @@ class MyGameApp(App):
                 path = astar(self.grid_state, start, end)
                 if path:
                     self.move_path = path
-                    self.move_color_button_step_by_step()
+                    self.movement.move_color_button_step_by_step()
                     self.selected_button = None
                     self.cleanup_free_spaces()
                 else:
@@ -179,30 +181,6 @@ class MyGameApp(App):
                 self.selected_button.background_color = [1, 1, 1, 1]
             self.selected_button = None
             self.cleanup_free_spaces()
-
-    def move_color_button_step_by_step(self):
-        self.sound_manager.play_sound('moving_button')
-        if not self.is_moving:
-            self.is_moving = True
-            self.is_animation_running = True
-        current_pos = self.move_path.pop(0)
-        next_pos = self.move_path[0]
-        colored_button = self.grid_buttons[current_pos[0] * 9 + current_pos[1]]
-        normal_button = self.grid_buttons[next_pos[0] * 9 + next_pos[1]]
-        self.create_trail_effect(current_pos)
-        self.move_color_to_normal_button(colored_button, normal_button)
-        if len(self.move_path) > 1:
-            Clock.schedule_once(lambda dt: self.move_color_button_step_by_step(), 0.1)
-        else:
-            self.is_moving = False
-            self.is_animation_running = False
-            self.check_line_of_same_color(normal_button)
-            if not self.lines_cleared:
-                self.next_colors = self.current_colors
-                self.update_color_buttons()
-                self.assign_random_colors_to_buttons()
-            self.lines_cleared = False
-            self.space_info()
 
     def cleanup_free_spaces(self):
         for row in range(9):
