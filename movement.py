@@ -1,10 +1,8 @@
 from kivy.clock import Clock
-from sound import SoundManager
 
 class Movement:
     def __init__(self, game):
         self.game = game
-        self.sound_manager = SoundManager()
 
     def move_color_button_step_by_step(self):
         self.game.sound_manager.play_sound('moving_button')
@@ -22,6 +20,7 @@ class Movement:
         self.move_color(current_pos, next_pos)
         if len(self.game.move_path) > 1:
             Clock.schedule_once(lambda dt: self.process_movement_step(), 0.1)
+            self.game.sound_manager.play_sound('moving_button')
         else:
             self.finalize_move(next_pos)
 
@@ -29,7 +28,17 @@ class Movement:
         colored_button = self.game.grid_buttons[current_pos[0] * 9 + current_pos[1]]
         normal_button = self.game.grid_buttons[next_pos[0] * 9 + next_pos[1]]
         self.game.create_trail_effect(current_pos)
-        self.game.move_color_to_normal_button(colored_button, normal_button)
+        self.move_color_to_normal_button(colored_button, normal_button)
+
+    def move_color_to_normal_button(self, colored_button, normal_button):
+        normal_button.background_normal = colored_button.background_normal
+        normal_button.background_down = colored_button.background_down
+        normal_button.background_color = [1, 1, 1, 1]
+        self.game.grid_state[normal_button.row][normal_button.col] = 1
+        self.game.grid_state[colored_button.row][colored_button.col] = 0
+        colored_button.background_normal = ''
+        colored_button.background_down = ''
+        colored_button.background_color = [0, 0, 0, 0.5]
 
     def finalize_move(self, final_pos):
         self.game.is_moving = False

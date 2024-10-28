@@ -32,7 +32,7 @@ class MyGameApp(App):
         self.sound_manager = SoundManager()
         self.bomb_uses = 0
         self.need = 0
-        self.game_logic = GameLogic(self.grid_buttons, self.sound_manager)
+        self.game_logic = GameLogic(self)
         self.movement = Movement(self)
 
     def create_top_layout(self):
@@ -204,16 +204,6 @@ class MyGameApp(App):
 
     def remove_trail(self, trail_button):
         self.root.remove_widget(trail_button)
-
-    def move_color_to_normal_button(self, colored_button, normal_button):
-        normal_button.background_normal = colored_button.background_normal
-        normal_button.background_down = colored_button.background_down
-        normal_button.background_color = [1, 1, 1, 1]
-        self.grid_state[normal_button.row][normal_button.col] = 1
-        self.grid_state[colored_button.row][colored_button.col] = 0
-        colored_button.background_normal = ''
-        colored_button.background_down = ''
-        colored_button.background_color = [0, 0, 0, 0.5]
 
     def check_line_of_same_color(self, button): 
         initial_color = button.background_normal
