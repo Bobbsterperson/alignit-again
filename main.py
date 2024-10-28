@@ -41,7 +41,7 @@ class MyGameApp(App):
     def create_top_layout(self):
         top_layout = BoxLayout(orientation='horizontal', size_hint_y=0.09, padding=[10, 10, 10, 30], spacing=20)
         reset_button = Button(background_normal='icons/restart.png', size_hint=(0.1, 1))
-        reset_button.bind(on_press=self.reset_game)
+        reset_button.bind(on_press=self.svld.reset_game)
         save_exit_button = Button(background_normal='icons/savexit.png', size_hint=(0.1, 1))
         save_exit_button.bind(on_press=self.svld.save_and_exit)
         self.score_label = Label(text='0000', size_hint=(0.25, 1))
@@ -210,7 +210,7 @@ class MyGameApp(App):
                 line = self.game_logic.check_direction(button, vectors, initial_color, color_to_check)
                 if len(line) >= 5:
                     all_line_positions.update(line)
-        self.increase_score_by(len(all_line_positions))
+        self.game_logic.increase_score_by(len(all_line_positions))
         if all_line_positions:
             self.clear_button_colors(all_line_positions)
             self.lines_cleared = True
@@ -265,7 +265,7 @@ class MyGameApp(App):
             self.highlight_new_button(button)
             line_buttons = self.check_line_of_same_color(button)
             if len(line_buttons) >= 5:
-                self.increase_score_by(len(line_buttons))
+                self.game_logic.increase_score_by(len(line_buttons))
                 for btn in line_buttons:
                     btn.background_normal = ''
                     btn.background_color = [0, 0, 0, 0.5]
@@ -287,7 +287,7 @@ class MyGameApp(App):
 
     def show_game_over_popup(self):
         self.sound_manager.play_sound('gameover')
-        high_scores = self.get_high_scores()
+        high_scores = self.game_logic.get_high_scores()
         best_score = high_scores[0] if high_scores else 0
         content = BoxLayout(orientation='vertical', padding=10, spacing=10)
         game_over_label = Label(text=f"Score: {self.score}", font_size='50sp')
@@ -305,12 +305,6 @@ class MyGameApp(App):
         self.bomb_info_label.text = f'{SCORE_NEEDED_FOR_BOMB - self.need}' if not self.bomb_disabled else ""
         self.update_bomb_button_state()
 
-    def increase_score_by(self, count):
-        self.score += count
-        self.score_label.text = f'{self.score:04d}'
-        self.check_score_for_bomb(count)
-        self.update_bomb_info_label()
-
     def check_score_for_bomb(self, count):
         self.need += count
         if self.need >= SCORE_NEEDED_FOR_BOMB:
@@ -318,45 +312,8 @@ class MyGameApp(App):
             self.need -= SCORE_NEEDED_FOR_BOMB
             self.update_bomb_button_state()
 
-    def reset_game(self, instance):
-        self.sound_manager.play_sound('ui')
-        if self.is_moving or self.is_animation_running:
-            return
-        self.score = 0
-        self.score_label.text = '0000'
-        self.grid_state = [[0 for _ in range(9)] for _ in range(9)]
-        if self.selected_button:
-            self.selected_button.background_color = [1, 1, 1, 1]
-            self.selected_button = None
-        for button in self.grid_buttons:
-            button.background_normal = ''
-            button.background_color = [0, 0, 0, 0.5]
-        self.color_buttons_layout.clear_widgets()
-        self.update_color_buttons()
-        self.next_colors = random.sample(COLOR_BUTTONS, 3)
-        self.bomb_uses = 0
-        self.need = 0
-        self.update_bomb_button_state()
-        self.assign_random_colors_to_buttons()
-        self.game_logic.cleanup_free_spaces()
-        self.space_info()
-
-    def get_high_scores(self):
-        self.sound_manager.play_sound('ui')
-        try:
-            with open('high_scores.json', 'r') as f:
-                high_scores = json.load(f)
-        except FileNotFoundError:
-            high_scores = []
-        if self.score > (high_scores[0] if high_scores else 0):
-            high_scores.append(self.score)
-            high_scores = sorted(set(high_scores), reverse=True)[:5]
-            with open('high_scores.json', 'w') as f:
-                json.dump(high_scores, f)
-        return high_scores
-
     def show_high_scores_popup(self, instance):
-        high_scores = self.get_high_scores()
+        high_scores = self.game_logic.get_high_scores()
         last_five_scores = high_scores[-5:] if len(high_scores) > 5 else high_scores
         score_text = "\n".join([f"{i + 1}. {score}" for i, score in enumerate(last_five_scores)])
         content_layout = BoxLayout(orientation='vertical', padding=10, spacing=10)
@@ -392,9 +349,6 @@ class MyGameApp(App):
         content_layout.add_widget(bomb_button)
         popup = Popup(title='High Scores', content=content_layout, size_hint=(0.5, 0.5))
         popup.open()
-
-    def update_score_label(self):
-        self.score_label.text = f'{self.score:04d}'
 
     def build(self):
         Window.size = (600, 1050)

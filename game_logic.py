@@ -2,6 +2,7 @@ from constants import *
 from kivy.core.window import Window
 from kivy.animation import Animation
 from sound import SoundManager
+import json
 
 class GameLogic:
     def __init__(self, game):
@@ -76,3 +77,26 @@ class GameLogic:
                     if button.background_normal != '' or button.background_color != [0, 0, 0, 0.5]:
                         button.background_normal = ''
                         button.background_color = [0, 0, 0, 0.5]
+
+    def update_score_label(self):
+        self.game.score_label.text = f'{self.game.score:04d}'
+
+    def get_high_scores(self):
+        self.sound_manager.play_sound('ui')
+        try:
+            with open('high_scores.json', 'r') as f:
+                high_scores = json.load(f)
+        except FileNotFoundError:
+            high_scores = []
+        if self.game.score > (high_scores[0] if high_scores else 0):
+            high_scores.append(self.game.score)
+            high_scores = sorted(set(high_scores), reverse=True)[:5]
+            with open('high_scores.json', 'w') as f:
+                json.dump(high_scores, f)
+        return high_scores
+    
+    def increase_score_by(self, count):
+        self.game.score += count
+        self.game.score_label.text = f'{self.game.score:04d}'
+        self.game.check_score_for_bomb(count)
+        self.game.update_bomb_info_label()
