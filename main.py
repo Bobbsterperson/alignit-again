@@ -40,7 +40,7 @@ class MyGameApp(App):
         save_exit_button = Button(background_normal='icons/savexit.png', size_hint=(0.1, 1))
         save_exit_button.bind(on_press=self.save_and_exit)
         self.score_label = Label(text='0000', size_hint=(0.25, 1))
-        self.update_font_size(self.score_label)
+        self.game_logic.update_font_size(self.score_label)
         score_button = Button(background_normal='icons/score.png', size_hint=(0.1, 1))
         score_button.bind(on_press=self.show_high_scores_popup)
         top_layout.add_widget(reset_button)
@@ -242,7 +242,7 @@ class MyGameApp(App):
         if initial_color not in COLOR_BUTTONS and initial_color != CROWN:
             return []
         all_line_positions = set()
-        directions = self.get_direction_vectors()
+        directions = self.game_logic.get_direction_vectors()
         for direction, vectors in directions.items():
             for color_to_check in COLOR_BUTTONS:
                 line = self.game_logic.check_direction(button, vectors, initial_color, color_to_check)
@@ -254,14 +254,6 @@ class MyGameApp(App):
             self.lines_cleared = True
         self.cleanup_free_spaces()
         return list(all_line_positions)
-
-    def get_direction_vectors(self):
-        return {
-            "horizontal": [(0, -1), (0, 1)],
-            "vertical": [(-1, 0), (1, 0)],
-            "diagonal1": [(-1, -1), (1, 1)],
-            "diagonal2": [(-1, 1), (1, -1)]
-        }
 
     def clear_button_colors(self, buttons):
         self.cleanup_free_spaces()
@@ -281,7 +273,6 @@ class MyGameApp(App):
             anim.bind(on_complete=self.animation_complete)
             anim.start(button)
         
-
     def remove_button(self, button):
         button.background_normal = ''
         button.background_color = [0, 0, 0, 0.5]
@@ -364,13 +355,6 @@ class MyGameApp(App):
             self.need -= SCORE_NEEDED_FOR_BOMB
             self.update_bomb_button_state()
 
-    def update_font_size(self, label):
-        window_height = Window.size[1]
-        label.font_size = window_height * 0.09
-
-    def on_size(self, *args):
-        self.update_font_size(self.score_label)
-
     def reset_game(self, instance):
         self.sound_manager.play_sound('ui')
         if self.is_moving or self.is_animation_running:
@@ -452,7 +436,6 @@ class MyGameApp(App):
                 json.dump(high_scores, f)
         return high_scores
 
-
     def show_high_scores_popup(self, instance):
         high_scores = self.get_high_scores()
         last_five_scores = high_scores[-5:] if len(high_scores) > 5 else high_scores
@@ -513,5 +496,6 @@ class MyGameApp(App):
         self.sound_manager.play_sound('background_music')
         self.space_info()
         return parent
+    
 if __name__ == '__main__':
     MyGameApp().run()

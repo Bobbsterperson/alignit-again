@@ -1,4 +1,5 @@
 from constants import *
+from kivy.core.window import Window
 
 class GameLogic:
     def __init__(self, grid_buttons, sound_manager):
@@ -27,3 +28,17 @@ class GameLogic:
                 else:
                     break
         return line
+    
+    def get_direction_vectors(self):
+        return {
+            "horizontal": [(0, -1), (0, 1)],
+            "vertical": [(-1, 0), (1, 0)],
+            "diagonal1": [(-1, -1), (1, 1)],
+            "diagonal2": [(-1, 1), (1, -1)]
+        }
+
+    def update_font_size(self, label):
+        window_height = Window.size[1]
+        label.font_size = window_height * 0.09
+
+    
