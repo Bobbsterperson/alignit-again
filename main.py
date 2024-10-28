@@ -34,6 +34,7 @@ class MyGameApp(App):
         self.need = 0
         self.game_logic = GameLogic(self)
         self.movement = Movement(self)
+        self.bomb_disabled = False
 
     def create_top_layout(self):
         top_layout = BoxLayout(orientation='horizontal', size_hint_y=0.09, padding=[10, 10, 10, 30], spacing=20)
@@ -102,7 +103,7 @@ class MyGameApp(App):
 
     def update_bomb_button_state(self):
         if hasattr(self, 'bomb_button'):
-            self.bomb_button.disabled = self.bomb_uses <= 0
+            self.bomb_button.disabled = self.bomb_disabled or self.bomb_uses <= 0
 
     def create_color_buttons_layout(self):
         self.color_buttons_layout = BoxLayout(orientation='horizontal', size_hint_y=0.2, spacing=10, padding=[10, 150, 10, 10])
@@ -308,7 +309,8 @@ class MyGameApp(App):
         popup.open()
 
     def update_bomb_info_label(self):
-        self.bomb_info_label.text = f'{SCORE_NEEDED_FOR_BOMB - self.need}'
+        self.bomb_info_label.text = f'{SCORE_NEEDED_FOR_BOMB - self.need}' if not self.bomb_disabled else ""
+        self.update_bomb_button_state()
 
     def increase_score_by(self, count):
         self.score += count
@@ -430,7 +432,10 @@ class MyGameApp(App):
                 self.sound_manager.play_background_music()
 
         def toggle_bomb(instance):
-            print("Bomb toggled")
+            self.bomb_disabled = not self.bomb_disabled
+            bomb_button.text = "Bomb Off" if not self.bomb_disabled else "Bomb On"
+            self.update_bomb_button_state()
+            self.update_bomb_info_label()
 
         mute_button.bind(on_press=toggle_mute)
         bomb_button.bind(on_press=toggle_bomb)
