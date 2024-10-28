@@ -1,9 +1,12 @@
 from constants import *
 from kivy.core.window import Window
+from kivy.animation import Animation
+from sound import SoundManager
 
 class GameLogic:
     def __init__(self, game):
         self.game = game
+        self.sound_manager = SoundManager()
 
     def check_direction(self, button, vectors, initial_color, color_to_check):
         line = [button]
@@ -39,3 +42,37 @@ class GameLogic:
     def update_font_size(self, label):
         window_height = Window.size[1]
         label.font_size = window_height * 0.09
+
+    def clear_button_colors(self, buttons):
+        self.sound_manager.play_sound('complete_line')
+        buttons_to_remove = []
+
+        def remove_all_buttons(instance, value):
+            for button in buttons_to_remove:
+                self.remove_button(button)
+        for button in buttons:
+            buttons_to_remove.append(button)
+            button.disabled = True
+            self.is_animation_running = True
+            anim = Animation(background_color=[1, 1, 0, 1], duration=0.2)
+            anim += Animation(background_color=[1, 1, 1, 0.5], duration=0.3)
+            anim.bind(on_complete=lambda anim, value: remove_all_buttons(anim, value))
+            anim.bind(on_complete=self.game.animation_complete)
+            anim.start(button)
+        self.cleanup_free_spaces()
+        self.game.space_info()
+
+    def remove_button(self, button):
+        button.background_normal = ''
+        button.background_color = [0, 0, 0, 0.5]
+        self.game.grid_state[button.row][button.col] = 0
+        button.disabled = False
+
+    def cleanup_free_spaces(self):
+        for row in range(9):
+            for col in range(9):
+                if self.game.grid_state[row][col] == 0:
+                    button = self.game.grid_buttons[row * 9 + col]
+                    if button.background_normal != '' or button.background_color != [0, 0, 0, 0.5]:
+                        button.background_normal = ''
+                        button.background_color = [0, 0, 0, 0.5]

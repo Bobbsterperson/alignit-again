@@ -16,6 +16,7 @@ from sound import SoundManager
 from game_logic import GameLogic
 from constants import *
 from movement import Movement
+from save_load import GameLoader
 
 class MyGameApp(App):
     def __init__(self, **kwargs):
@@ -35,13 +36,14 @@ class MyGameApp(App):
         self.game_logic = GameLogic(self)
         self.movement = Movement(self)
         self.bomb_disabled = False
+        self.svld = GameLoader(self)
 
     def create_top_layout(self):
         top_layout = BoxLayout(orientation='horizontal', size_hint_y=0.09, padding=[10, 10, 10, 30], spacing=20)
         reset_button = Button(background_normal='icons/restart.png', size_hint=(0.1, 1))
         reset_button.bind(on_press=self.reset_game)
         save_exit_button = Button(background_normal='icons/savexit.png', size_hint=(0.1, 1))
-        save_exit_button.bind(on_press=self.save_and_exit)
+        save_exit_button.bind(on_press=self.svld.save_and_exit)
         self.score_label = Label(text='0000', size_hint=(0.25, 1))
         self.game_logic.update_font_size(self.score_label)
         score_button = Button(background_normal='icons/score.png', size_hint=(0.1, 1))
@@ -80,7 +82,7 @@ class MyGameApp(App):
                     self.grid_state[button.row][button.col] = 0
                 self.selected_button.background_color = [1, 1, 1, 1]
                 self.selected_button = None
-                self.cleanup_free_spaces()
+                self.game_logic.cleanup_free_spaces()
                 self.space_info()
             else:
                 print("No bomb uses left!")
@@ -149,7 +151,7 @@ class MyGameApp(App):
     def on_button_click(self, button):
         print(self.bomb_uses)
         self.update_bomb_button_state()
-        self.cleanup_free_spaces()
+        self.game_logic.cleanup_free_spaces()
         self.sound_manager.play_sound('click_button')
         if self.is_moving or self.is_animation_running:
             return
@@ -162,35 +164,26 @@ class MyGameApp(App):
                     self.move_path = path
                     self.movement.move_color_button_step_by_step()
                     self.selected_button = None
-                    self.cleanup_free_spaces()
+                    self.game_logic.cleanup_free_spaces()
                 else:
                     self.sound_manager.play_sound('no_path')
                     print("No free path available")
-                    self.cleanup_free_spaces()
+                    self.game_logic.cleanup_free_spaces()
             else:
                 self.selected_button.background_color = [1, 1, 1, 1]
                 self.selected_button = None
-                self.cleanup_free_spaces()
+                self.game_logic.cleanup_free_spaces()
         if button.background_normal in COLOR_BUTTONS:
             if self.selected_button:
                 self.selected_button.background_color = [1, 1, 1, 1]
             self.selected_button = button
             self.selected_button.background_color = [1.5, 1.5, 1.5, 1]
-            self.cleanup_free_spaces()
+            self.game_logic.cleanup_free_spaces()
         else:
             if self.selected_button:
                 self.selected_button.background_color = [1, 1, 1, 1]
             self.selected_button = None
-            self.cleanup_free_spaces()
-
-    def cleanup_free_spaces(self):
-        for row in range(9):
-            for col in range(9):
-                if self.grid_state[row][col] == 0:
-                    button = self.grid_buttons[row * 9 + col]
-                    if button.background_normal != '' or button.background_color != [0, 0, 0, 0.5]:
-                        button.background_normal = ''
-                        button.background_color = [0, 0, 0, 0.5]
+            self.game_logic.cleanup_free_spaces()
 
     def create_trail_effect(self, position):
         button = self.grid_buttons[position[0] * 9 + position[1]]
@@ -221,11 +214,11 @@ class MyGameApp(App):
         if all_line_positions:
             self.clear_button_colors(all_line_positions)
             self.lines_cleared = True
-        self.cleanup_free_spaces()
+        self.game_logic.cleanup_free_spaces()
         return list(all_line_positions)
 
     def clear_button_colors(self, buttons):
-        self.cleanup_free_spaces()
+        self.game_logic.cleanup_free_spaces()
         self.sound_manager.play_sound('complete_line')
         buttons_to_remove = []
 
@@ -279,7 +272,7 @@ class MyGameApp(App):
                     self.grid_state[btn.row][btn.col] = 0
         if all(all(cell != 0 for cell in row) for row in self.grid_state):
             self.show_game_over_popup()
-            self.cleanup_free_spaces()
+            self.game_logic.cleanup_free_spaces()
 
     def highlight_new_button(self, button):
         self.is_animation_running = True
@@ -290,7 +283,7 @@ class MyGameApp(App):
 
     def animation_complete(self, animation, widget):
         self.is_animation_running = False
-        self.cleanup_free_spaces()
+        self.game_logic.cleanup_free_spaces()
 
     def show_game_over_popup(self):
         self.sound_manager.play_sound('gameover')
@@ -345,54 +338,8 @@ class MyGameApp(App):
         self.need = 0
         self.update_bomb_button_state()
         self.assign_random_colors_to_buttons()
-        self.cleanup_free_spaces()
+        self.game_logic.cleanup_free_spaces()
         self.space_info()
-
-
-    def save_game(self):
-        self.sound_manager.play_sound('ui')
-        if self.is_moving or self.is_animation_running:
-            return
-        if self.selected_button:
-            self.selected_button.background_color = [1, 1, 1, 1]
-            self.selected_button = None
-        game_state = {
-            'grid_state': self.grid_state,
-            'button_states': [
-                {
-                    'image': button.background_normal,
-                    'opacity': button.background_color
-                } for button in self.grid_buttons
-            ],
-            'score': self.score,
-            'high_scores': self.get_high_scores(),
-            'bomb_uses': self.bomb_uses,
-            'need': self.need,
-            'bomb_disabled': self.bomb_disabled
-        }
-        with open('game_save.json', 'w') as f:
-            json.dump(game_state, f)
-
-    def load_game(self):
-        try:
-            with open('game_save.json', 'r') as f:
-                game_state = json.load(f)
-                self.grid_state = game_state['grid_state']
-                self.score = game_state['score']
-                self.update_score_label()
-                for button, button_state in zip(self.grid_buttons, game_state['button_states']):
-                    button.background_normal = button_state['image']
-                    button.background_color = button_state['opacity']
-                self.bomb_uses = game_state.get('bomb_uses', 0)
-                self.need = game_state.get('need', 0)
-                self.bomb_disabled = game_state.get('bomb_disabled', False)
-                self.update_bomb_info_label()
-                self.update_bomb_button_state()
-                self.check_score_for_bomb(0)
-                self.space_info()
-        except FileNotFoundError:
-            self.assign_random_colors_to_buttons()
-            print("No saved game")
 
     def get_high_scores(self):
         self.sound_manager.play_sound('ui')
@@ -449,14 +396,6 @@ class MyGameApp(App):
     def update_score_label(self):
         self.score_label.text = f'{self.score:04d}'
 
-    def save_and_exit(self, instance):
-        if self.is_moving or self.is_animation_running:
-            return
-        else:
-            self.sound_manager.stop_sound('background_music')
-            self.save_game()
-            App.get_running_app().stop()
-
     def build(self):
         Window.size = (600, 1050)
         parent = RelativeLayout()
@@ -466,7 +405,7 @@ class MyGameApp(App):
         main_layout.add_widget(top_layout)
         main_layout.add_widget(self.create_the_layouts())
         parent.add_widget(main_layout)
-        self.load_game()
+        self.svld.load_game()
         self.next_colors = random.sample(COLOR_BUTTONS, 3)
         self.sound_manager.play_sound('background_music')
         self.space_info()
