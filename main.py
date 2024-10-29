@@ -40,26 +40,31 @@ class MyGameApp(App):
         self.svld = GameLoader(self)
         self.color_buttons = []
 
-
-
-
-
-
     def create_top_layout(self):
         top_layout = BoxLayout(orientation='horizontal', size_hint_y=0.09, padding=[10, 10, 10, 30], spacing=20)
-        reset_button = Button(background_normal='icons/restart.png', size_hint=(0.1, 1))
-        reset_button.bind(on_press=self.svld.reset_game)
-        save_exit_button = Button(background_normal='icons/savexit.png', size_hint=(0.1, 1))
-        save_exit_button.bind(on_press=self.svld.save_and_exit)
+        reset_button = Button(background_normal='icons/restart.png', size_hint=(None, None))
+        save_exit_button = Button(background_normal='icons/savexit.png', size_hint=(None, None))
         self.score_label = Label(text='0000', size_hint=(0.25, 1))
-        self.game_logic.update_font_size(self.score_label)
-        score_button = Button(background_normal='icons/score.png', size_hint=(0.1, 1))
+        score_button = Button(background_normal='icons/score.png', size_hint=(None, None))
+        reset_button.bind(on_press=self.svld.reset_game)
+        save_exit_button.bind(on_press=self.svld.save_and_exit)
         score_button.bind(on_press=self.show_high_scores_popup)
         top_layout.add_widget(reset_button)
         top_layout.add_widget(save_exit_button)
         top_layout.add_widget(self.score_label)
         top_layout.add_widget(score_button)
+        top_layout.bind(size=self.update_top_button_sizes)
         return top_layout
+
+    def update_top_button_sizes(self, instance, size):
+        button_count = 3
+        button_width = size[0] / button_count / 2
+        for button in instance.children:
+            if isinstance(button, Button):
+                button.size_hint = (None, None)
+                button.size = (button_width, button_width)
+        self.score_label.size_hint = (0.25, 1)
+        self.score_label.font_size = '100sp' 
     
     def create_the_layouts(self):
         color_buttons_layout = self.create_color_buttons_layout()
@@ -82,6 +87,8 @@ class MyGameApp(App):
             button.size_hint = (None, None)
             button.size = (width, width)
         self.bomb_button.size = (width, width)
+        self.bomb_info_label.size_hint = (None, None)
+        self.bomb_info_label.size = (width, width)
     
     def highlight_matching_buttons(self, color):
         matching_buttons = [button for button in self.grid_buttons if button.background_normal == color]
@@ -106,17 +113,19 @@ class MyGameApp(App):
         self.bomb_button = Button(background_normal='icons/bomb.jpg', size_hint=(None, None))
         self.bomb_button.bind(on_press=self.bomb.use_bomb)
         buttons_layout.add_widget(self.bomb_button)
-        self.color_buttons_layout.add_widget(buttons_layout)
         self.bomb_info_label = Label(
             text=f'{SCORE_NEEDED_FOR_BOMB - self.need}', 
-            font_size='70sp', 
-            size_hint=(0.3, 1), 
+            font_size='100sp', 
+            size_hint=(None, None), 
             height=50,
             halign='right', 
             valign='middle',
             padding=(10, 0)
         )
+        self.color_buttons_layout.add_widget(buttons_layout)
         self.color_buttons_layout.add_widget(self.bomb_info_label)
+        self.color_buttons_layout.bind(size=self.update_button_sizes)
+        self.update_button_sizes(self.color_buttons_layout, self.color_buttons_layout.size)  # 
         self.bomb.update_bomb_button_state()
 
     def create_grid_layout(self):
