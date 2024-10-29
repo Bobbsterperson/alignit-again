@@ -61,8 +61,20 @@ class MyGameApp(App):
     def update_score_font_size(self):
         self.score_label.font_size = f'{min(Window.width, Window.height) * 0.05}sp'
 
+    def update_bomb_info_label_size(self):
+        if self.bomb_info_label:
+            self.bomb_info_label.font_size = f'{min(Window.width, Window.height) * 0.05}sp'
+            self.bomb_info_label.size_hint = (None, None)
+            self.bomb_info_label.size = (self.color_buttons_layout.width / (len(self.color_buttons) + 1), 30)
+
     def on_window_resize(self, *args):
         self.update_score_font_size()
+        self.update_grid_size()
+        self.update_bomb_info_label_size()
+
+    def update_grid_size(self):
+        square_size = min(Window.width, Window.height) * 0.5
+        self.root.children[0].children[0].children[1].size = (square_size, square_size)
 
     def update_top_button_sizes(self, instance, size):
         button_count = len(instance.children)
@@ -139,7 +151,9 @@ class MyGameApp(App):
         self.bomb.update_bomb_button_state()
 
     def create_grid_layout(self):
-        grid_layout = GridLayout(cols=9, rows=9, size_hint=(1, 0.5), spacing=4)
+        grid_layout = GridLayout(cols=9, rows=9, size_hint=(None, None), spacing=4)
+        square_size = min(Window.width, Window.height) * 1.0
+        grid_layout.size = (square_size, square_size)
         for row in range(9):
             for col in range(9):
                 button = Button(size_hint=(1, 1))
@@ -149,6 +163,7 @@ class MyGameApp(App):
                 grid_layout.add_widget(button)
                 self.grid_buttons.append(button)
                 button.bind(on_press=self.on_button_click)
+
         return grid_layout
     
     def on_button_click(self, button):
