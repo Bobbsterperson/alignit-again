@@ -40,6 +40,11 @@ class MyGameApp(App):
         self.svld = GameLoader(self)
         self.color_buttons = []
 
+
+
+
+
+
     def create_top_layout(self):
         top_layout = BoxLayout(orientation='horizontal', size_hint_y=0.09, padding=[10, 10, 10, 30], spacing=20)
         reset_button = Button(background_normal='icons/restart.png', size_hint=(0.1, 1))
