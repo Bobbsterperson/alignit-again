@@ -38,6 +38,7 @@ class MyGameApp(App):
         self.movement = Movement(self)
         self.bomb_disabled = False
         self.svld = GameLoader(self)
+        self.color_buttons = []
 
     def create_top_layout(self):
         top_layout = BoxLayout(orientation='horizontal', size_hint_y=0.09, padding=[10, 10, 10, 30], spacing=20)
@@ -67,14 +68,27 @@ class MyGameApp(App):
         self.color_buttons_layout = BoxLayout(orientation='horizontal', size_hint_y=0.2, spacing=10, padding=[10, 150, 10, 10])
         self.update_color_buttons()
         return self.color_buttons_layout
+    
+    def highlight_matching_buttons(self, color):
+        matching_buttons = [button for button in self.grid_buttons if button.background_normal == color]
+        if matching_buttons:
+            for button in matching_buttons:
+                self.highlight_new_button(button)
+
+    def highlight_buttons(self, buttons):
+        for button in buttons:
+            button.background_color = [1, 0, 0, 1] 
 
     def update_color_buttons(self):
         self.color_buttons_layout.clear_widgets()
+        self.color_buttons = []
         self.current_colors = random.sample(COLOR_BUTTONS, 3)
         buttons_layout = BoxLayout(orientation='horizontal', size_hint=(1, 1), spacing=10)
         for color in self.current_colors:
             color_button = Button(background_normal=color, size_hint=(0.5, 1), width=100)
+            color_button.bind(on_press=lambda btn, color=color: self.highlight_matching_buttons(color))
             buttons_layout.add_widget(color_button)  
+            self.color_buttons.append(color_button)
         self.bomb_button = Button(background_normal='icons/bomb.jpg', size_hint=(0.5, 1), width=100)
         self.bomb_button.bind(on_press=self.bomb.use_bomb)
         buttons_layout.add_widget(self.bomb_button)
@@ -254,7 +268,7 @@ class MyGameApp(App):
         content.add_widget(game_over_label)
         content.add_widget(restart_button)
         popup = Popup(title="Game Over", content=content, size_hint=(0.5, 0.5))
-        restart_button.bind(on_press=lambda *args: (self.reset_game(None), popup.dismiss()))
+        restart_button.bind(on_press=lambda *args: (self.svld.reset_game(None), popup.dismiss()))
         popup.open()
 
     def update_bomb_info_label(self):
@@ -308,6 +322,7 @@ class MyGameApp(App):
 
     def build(self):
         Window.size = (600, 1050)
+        # Window.fullscreen = 'auto'
         parent = RelativeLayout()
         parent.add_widget(Image(source=BACKGR, fit_mode='cover'))
         main_layout = BoxLayout(orientation='vertical')    
