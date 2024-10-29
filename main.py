@@ -100,6 +100,9 @@ class MyGameApp(App):
         for button in buttons:
             button.background_color = [1, 0, 0, 1] 
 
+
+
+
     def update_color_buttons(self):
         self.color_buttons_layout.clear_widgets()
         self.color_buttons = []
