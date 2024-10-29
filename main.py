@@ -41,11 +41,13 @@ class MyGameApp(App):
         self.color_buttons = []
 
     def create_top_layout(self):
-        top_layout = BoxLayout(orientation='horizontal', size_hint_y=0.09, padding=[10, 10, 10, 30], spacing=20)
-        reset_button = Button(background_normal='icons/restart.png', size_hint=(None, None))
-        save_exit_button = Button(background_normal='icons/savexit.png', size_hint=(None, None))
-        self.score_label = Label(text='0000', size_hint=(0.25, 1))
-        score_button = Button(background_normal='icons/score.png', size_hint=(None, None))
+        top_layout = BoxLayout(orientation='horizontal', size_hint_y=0.1, padding=10, spacing=10)
+        reset_button = Button(background_normal='icons/restart.png', size_hint=(None, None), size=(50, 50))
+        save_exit_button = Button(background_normal='icons/savexit.png', size_hint=(None, None), size=(50, 50))      
+        self.score_label = Label(text='0000', size_hint=(1, None), height=50)
+        self.update_score_font_size()
+        Window.bind(on_resize=self.on_window_resize)
+        score_button = Button(background_normal='icons/score.png', size_hint=(None, None), size=(50, 50))
         reset_button.bind(on_press=self.svld.reset_game)
         save_exit_button.bind(on_press=self.svld.save_and_exit)
         score_button.bind(on_press=self.show_high_scores_popup)
@@ -56,15 +58,23 @@ class MyGameApp(App):
         top_layout.bind(size=self.update_top_button_sizes)
         return top_layout
 
+    def update_score_font_size(self):
+        self.score_label.font_size = f'{min(Window.width, Window.height) * 0.05}sp'
+
+    def on_window_resize(self, *args):
+        self.update_score_font_size()
+
     def update_top_button_sizes(self, instance, size):
-        button_count = 3
-        button_width = size[0] / button_count / 2
+        button_count = len(instance.children)
+        button_width = size[0] / button_count * 0.8
+
         for button in instance.children:
             if isinstance(button, Button):
                 button.size_hint = (None, None)
                 button.size = (button_width, button_width)
-        self.score_label.size_hint = (0.25, 1)
-        self.score_label.font_size = '100sp' 
+        self.score_label.size_hint = (1, None)
+        self.score_label.height = button_width
+        self.update_score_font_size()
     
     def create_the_layouts(self):
         color_buttons_layout = self.create_color_buttons_layout()
@@ -75,7 +85,7 @@ class MyGameApp(App):
         return color_grid_layout
     
     def create_color_buttons_layout(self):
-        self.color_buttons_layout = BoxLayout(orientation='horizontal', size_hint_y=0.2, spacing=10, padding=[10, 150, 10, 10])
+        self.color_buttons_layout = BoxLayout(orientation='horizontal', size_hint_y=0.2, spacing=10, padding=[10, 10, 10, 10])
         self.update_color_buttons()
         self.color_buttons_layout.bind(size=self.update_button_sizes)
         return self.color_buttons_layout
@@ -99,9 +109,6 @@ class MyGameApp(App):
     def highlight_buttons(self, buttons):
         for button in buttons:
             button.background_color = [1, 0, 0, 1] 
-
-
-
 
     def update_color_buttons(self):
         self.color_buttons_layout.clear_widgets()
@@ -338,7 +345,6 @@ class MyGameApp(App):
             bomb_button.text = "Bomb Off" if not self.bomb_disabled else "Bomb On"
             self.bomb.update_bomb_button_state()
             self.update_bomb_info_label()
-
         mute_button.bind(on_press=toggle_mute)
         bomb_button.bind(on_press=toggle_bomb)
         content_layout.add_widget(mute_button)
@@ -347,7 +353,11 @@ class MyGameApp(App):
         popup.open()
 
     def build(self):
-        Window.size = (600, 1050)
+        # aspect_ratio = 16 / 9
+        # width = Window.width
+        # Window.size = (width, int(width * aspect_ratio))
+        # Window.size = (800, 1280)
+        Window.size = (360, 640)
         # Window.fullscreen = 'auto'
         parent = RelativeLayout()
         parent.add_widget(Image(source=BACKGR, fit_mode='cover'))
