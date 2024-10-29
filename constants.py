@@ -1,6 +1,6 @@
 
 
-SCORE_NEEDED_FOR_BOMB = 20
+SCORE_NEEDED_FOR_BOMB = 40
 CROWN = 'icons/crown.png'
 COLOR_BUTTONS = ['icons/blue.png', 
                  'icons/green.png', 

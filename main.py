@@ -67,7 +67,16 @@ class MyGameApp(App):
     def create_color_buttons_layout(self):
         self.color_buttons_layout = BoxLayout(orientation='horizontal', size_hint_y=0.2, spacing=10, padding=[10, 150, 10, 10])
         self.update_color_buttons()
+        self.color_buttons_layout.bind(size=self.update_button_sizes)
         return self.color_buttons_layout
+    
+    def update_button_sizes(self, instance, size):
+        button_count = len(self.color_buttons) + 3
+        width = size[0] / button_count
+        for button in self.color_buttons:
+            button.size_hint = (None, None)
+            button.size = (width, width)
+        self.bomb_button.size = (width, width)
     
     def highlight_matching_buttons(self, color):
         matching_buttons = [button for button in self.grid_buttons if button.background_normal == color]
@@ -85,11 +94,11 @@ class MyGameApp(App):
         self.current_colors = random.sample(COLOR_BUTTONS, 3)
         buttons_layout = BoxLayout(orientation='horizontal', size_hint=(1, 1), spacing=10)
         for color in self.current_colors:
-            color_button = Button(background_normal=color, size_hint=(0.5, 1), width=100)
+            color_button = Button(background_normal=color, size_hint=(None, None))
             color_button.bind(on_press=lambda btn, color=color: self.highlight_matching_buttons(color))
             buttons_layout.add_widget(color_button)  
             self.color_buttons.append(color_button)
-        self.bomb_button = Button(background_normal='icons/bomb.jpg', size_hint=(0.5, 1), width=100)
+        self.bomb_button = Button(background_normal='icons/bomb.jpg', size_hint=(None, None))
         self.bomb_button.bind(on_press=self.bomb.use_bomb)
         buttons_layout.add_widget(self.bomb_button)
         self.color_buttons_layout.add_widget(buttons_layout)

@@ -12,9 +12,12 @@ class SoundManager:
             'background_music': SoundLoader.load('icons/thesong.mp3'),
             'bomb': SoundLoader.load('icons/bomb.wav')
         }
-        self.sounds['gameover'].volume = 0.4
-        self.sounds['background_music'].volume = 0.4
-        self.sounds['bomb'].volume = 0.4
+        # self.sounds['gameover'].volume = 0.4
+        # self.sounds['background_music'].volume = 0.4
+        # self.sounds['bomb'].volume = 0.4
+        self.sounds['gameover'].volume = 1
+        self.sounds['background_music'].volume = 1
+        self.sounds['bomb'].volume = 1
         self.is_muted = False
 
     def play_sound(self, sound_name):
