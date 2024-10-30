@@ -59,13 +59,12 @@ class MyGameApp(App):
         return top_layout
 
     def update_score_font_size(self):
-        self.score_label.font_size = f'{min(Window.width, Window.height) * 0.05}sp'
+        font_size = max(20, min(self.score_label.height * 0.5, self.score_label.width * 0.25))
+        self.score_label.font_size = f"{font_size}sp"
 
     def update_bomb_info_label_size(self):
         if self.bomb_info_label:
-            self.bomb_info_label.font_size = f'{min(Window.width, Window.height) * 0.05}sp'
-            self.bomb_info_label.size_hint = (None, None)
-            self.bomb_info_label.size = (self.color_buttons_layout.width / (len(self.color_buttons) + 1), 30)
+            self.bomb_info_label.font_size = f"{min(self.bomb_info_label.height, self.bomb_info_label.width) * 0.25}sp"
 
     def on_window_resize(self, *args):
         self.update_score_font_size()
@@ -87,6 +86,7 @@ class MyGameApp(App):
         self.score_label.size_hint = (1, None)
         self.score_label.height = button_width
         self.update_score_font_size()
+        self.update_bomb_info_label_size()
     
     def create_the_layouts(self):
         color_buttons_layout = self.create_color_buttons_layout()
@@ -138,7 +138,7 @@ class MyGameApp(App):
         self.bomb_info_label = Label(
             text=f'{SCORE_NEEDED_FOR_BOMB - self.need}', 
             font_size='100sp', 
-            size_hint=(None, None), 
+            size_hint=(1, None), 
             height=50,
             halign='right', 
             valign='middle',
@@ -372,8 +372,8 @@ class MyGameApp(App):
         # width = Window.width
         # Window.size = (width, int(width * aspect_ratio))
         # Window.size = (800, 1280)
-        Window.size = (360, 640)
-        # Window.fullscreen = 'auto'
+        # Window.size = (360, 640)
+        Window.fullscreen = 'auto'
         parent = RelativeLayout()
         parent.add_widget(Image(source=BACKGR, fit_mode='cover'))
         main_layout = BoxLayout(orientation='vertical')    
