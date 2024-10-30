@@ -44,7 +44,7 @@ class MyGameApp(App):
         top_layout = BoxLayout(orientation='horizontal', size_hint_y=0.1, padding=10, spacing=10)
         reset_button = Button(background_normal='icons/restart.png', size_hint=(None, None), size=(50, 50))
         save_exit_button = Button(background_normal='icons/savexit.png', size_hint=(None, None), size=(50, 50))      
-        self.score_label = Label(text='0000', size_hint=(1, None), height=50)
+        self.score_label = Label(text='0000', size_hint=((None, None)))
         self.update_score_font_size()
         Window.bind(on_resize=self.on_window_resize)
         score_button = Button(background_normal='icons/score.png', size_hint=(None, None), size=(50, 50))
@@ -58,18 +58,19 @@ class MyGameApp(App):
         top_layout.bind(size=self.update_top_button_sizes)
         return top_layout
 
-    def update_score_font_size(self):
-        font_size = max(20, min(self.score_label.height * 0.5, self.score_label.width * 0.25))
-        self.score_label.font_size = f"{font_size}sp"
+    def calculate_dynamic_font_size(self):
+        base_font_size_ratio = 0.06
+        dpi_factor = Window.dpi / 160
+        min_dimension = min(Window.width, Window.height)
+        return f"{int(min_dimension * base_font_size_ratio / dpi_factor)}sp"
 
-    def update_bomb_info_label_size(self):
-        if self.bomb_info_label:
-            self.bomb_info_label.font_size = f"{min(self.bomb_info_label.height, self.bomb_info_label.width) * 0.25}sp"
+
+    def update_score_font_size(self):
+            self.score_label.font_size = self.calculate_dynamic_font_size()
 
     def on_window_resize(self, *args):
         self.update_score_font_size()
         self.update_grid_size()
-        self.update_bomb_info_label_size()
 
     def update_grid_size(self):
         square_size = min(Window.width, Window.height) * 0.5
@@ -86,7 +87,6 @@ class MyGameApp(App):
         self.score_label.size_hint = (1, None)
         self.score_label.height = button_width
         self.update_score_font_size()
-        self.update_bomb_info_label_size()
     
     def create_the_layouts(self):
         color_buttons_layout = self.create_color_buttons_layout()
@@ -137,9 +137,8 @@ class MyGameApp(App):
         buttons_layout.add_widget(self.bomb_button)
         self.bomb_info_label = Label(
             text=f'{SCORE_NEEDED_FOR_BOMB - self.need}', 
-            font_size='100sp', 
-            size_hint=(1, None), 
-            height=50,
+            font_size=self.calculate_dynamic_font_size(),
+            size_hint=(None, None), 
             halign='right', 
             valign='middle',
             padding=(10, 0)
@@ -308,14 +307,14 @@ class MyGameApp(App):
         high_scores = self.game_logic.get_high_scores()
         best_score = high_scores[0] if high_scores else 0
         content = BoxLayout(orientation='vertical', padding=10, spacing=10)
-        game_over_label = Label(text=f"Score: {self.score}", font_size='50sp')
+        game_over_label = Label(text=f"Score: {self.score}", font_size=FONT_SIZE_GAME_OVER)
         if self.score > best_score:
-            best_score_label = Label(text="New Best Score!", font_size='24sp', color=(1, 0.8, 0, 1))
+            best_score_label = Label(text="New Best Score!", font_size=FONT_SIZE_HIGH_SCORE, color=(1, 0.8, 0, 1))
             content.add_widget(best_score_label)
         restart_button = Button(text="Restart", size_hint=(1, 0.4))
         content.add_widget(game_over_label)
         content.add_widget(restart_button)
-        popup = Popup(title="Game Over", content=content, size_hint=(0.5, 0.5))
+        popup = Popup(title="Game Over", content=content, size_hint=(1, 1))
         restart_button.bind(on_press=lambda *args: (self.svld.reset_game(None), popup.dismiss()))
         popup.open()
 
@@ -371,8 +370,8 @@ class MyGameApp(App):
         # aspect_ratio = 16 / 9
         # width = Window.width
         # Window.size = (width, int(width * aspect_ratio))
-        # Window.size = (800, 1280)
-        # Window.size = (360, 640)
+        # Window.size = (600, 1000)
+        # Window.size = (540, 1200)
         Window.fullscreen = 'auto'
         parent = RelativeLayout()
         parent.add_widget(Image(source=BACKGR, fit_mode='cover'))
