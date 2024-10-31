@@ -5,6 +5,7 @@ from game_logic import GameLogic
 import random
 from constants import *
 from bomb import Bomb
+from kivy.clock import Clock
 
 class GameLoader:
     def __init__(self, game):
@@ -57,8 +58,8 @@ class GameLoader:
                 self.game.check_score_for_bomb(0)
                 self.game.space_info()
         except FileNotFoundError:
-            self.game.assign_random_colors_to_buttons()
             print("No saved game")
+            Clock.schedule_once(lambda dt: self.game.assign_random_colors_to_buttons(), 0)
 
     def save_and_exit(self, instance):
         if self.game.is_moving or self.game.is_animation_running:

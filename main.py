@@ -58,18 +58,18 @@ class MyGameApp(App):
         top_layout.bind(size=self.update_top_button_sizes)
         return top_layout
 
-    def calculate_dynamic_font_size(self):
-        base_font_size_ratio = 0.06
-        dpi_factor = Window.dpi / 160
-        min_dimension = min(Window.width, Window.height)
-        return f"{int(min_dimension * base_font_size_ratio / dpi_factor)}sp"
-
+    def calculate_dynamic_font_size(self, base_font_ratio=0.05):
+        screen_width_inches = Window.width / Window.dpi
+        screen_height_inches = Window.height / Window.dpi
+        min_dimension_inches = min(screen_width_inches, screen_height_inches)
+        return f"{int(min_dimension_inches * Window.dpi * base_font_ratio)}sp"
 
     def update_score_font_size(self):
-            self.score_label.font_size = self.calculate_dynamic_font_size()
+            self.score_label.font_size = self.calculate_dynamic_font_size(base_font_ratio=0.06)
 
     def on_window_resize(self, *args):
         self.update_score_font_size()
+        self.bomb_info_label.font_size = self.calculate_dynamic_font_size(base_font_ratio=0.05)
         self.update_grid_size()
 
     def update_grid_size(self):
@@ -79,7 +79,6 @@ class MyGameApp(App):
     def update_top_button_sizes(self, instance, size):
         button_count = len(instance.children)
         button_width = size[0] / button_count * 0.8
-
         for button in instance.children:
             if isinstance(button, Button):
                 button.size_hint = (None, None)
@@ -162,7 +161,6 @@ class MyGameApp(App):
                 grid_layout.add_widget(button)
                 self.grid_buttons.append(button)
                 button.bind(on_press=self.on_button_click)
-
         return grid_layout
     
     def on_button_click(self, button):
@@ -323,7 +321,7 @@ class MyGameApp(App):
         self.sound_manager.play_sound('gameover')
         high_scores = self.game_logic.get_high_scores()
         best_score = high_scores[0] if high_scores else 0
-        content = BoxLayout(orientation='vertical', padding=10, spacing=10)
+        content = BoxLayout(orientation='vertical')
         game_over_label = Label(text=f"Score: {self.score}", font_size=FONT_SIZE_GAME_OVER)
         if self.score > best_score:
             best_score_label = Label(text="New Best Score!", font_size=FONT_SIZE_HIGH_SCORE, color=(1, 0.8, 0, 1))
@@ -331,7 +329,7 @@ class MyGameApp(App):
         restart_button = Button(text="Restart", size_hint=(1, 0.4))
         content.add_widget(game_over_label)
         content.add_widget(restart_button)
-        popup = Popup(title="Game Over", content=content, size_hint=(1, 1))
+        popup = Popup(title="Game Over", content=content, size_hint=(1.1, 1.1))
         restart_button.bind(on_press=lambda *args: (self.svld.reset_game(None), popup.dismiss()))
         popup.open()
 
