@@ -269,24 +269,41 @@ class MyGameApp(App):
         return [button for button in self.grid_buttons if self.grid_state[button.row][button.col] == 0]
 
     def assign_random_colors_to_buttons(self):
+        selected_buttons = self.select_buttons_for_colors()
+        if not selected_buttons:
+            return
+        for button, color in zip(selected_buttons, self.next_colors[:len(selected_buttons)]):
+            self.assign_color_to_button(button, color)
+            self.handle_line_for_button(button)
+        self.check_for_game_over()
+
+    def select_buttons_for_colors(self):
         available_buttons = self.check_for_free_pos()
         num_colors_to_spawn = min(len(available_buttons), len(self.next_colors))
         if num_colors_to_spawn == 0:
-            return
-        selected_buttons = random.sample(available_buttons, num_colors_to_spawn)
-        for button, color in zip(selected_buttons, self.next_colors[:num_colors_to_spawn]):
-            button.background_normal = color
-            button.background_down = color
-            button.background_color = [1, 1, 1, 1]
-            self.grid_state[button.row][button.col] = 1
-            self.highlight_new_button(button)
-            line_buttons = self.check_line_of_same_color(button)
-            if len(line_buttons) >= 5:
-                self.game_logic.increase_score_by(len(line_buttons))
-                for btn in line_buttons:
-                    btn.background_normal = ''
-                    btn.background_color = [0, 0, 0, 0.5]
-                    self.grid_state[btn.row][btn.col] = 0
+            return None
+        return random.sample(available_buttons, num_colors_to_spawn)
+
+    def assign_color_to_button(self, button, color):
+        button.background_normal = color
+        button.background_down = color
+        button.background_color = [1, 1, 1, 1]
+        self.grid_state[button.row][button.col] = 1
+        self.highlight_new_button(button)
+
+    def handle_line_for_button(self, button):
+        line_buttons = self.check_line_of_same_color(button)
+        if len(line_buttons) >= 5:
+            self.game_logic.increase_score_by(len(line_buttons))
+            for btn in line_buttons:
+                self.clear_button_color(btn)
+
+    def clear_button_color(self, button):
+        button.background_normal = ''
+        button.background_color = [0, 0, 0, 0.5]
+        self.grid_state[button.row][button.col] = 0
+
+    def check_for_game_over(self):
         if all(all(cell != 0 for cell in row) for row in self.grid_state):
             self.show_game_over_popup()
             self.game_logic.cleanup_free_spaces()
@@ -330,49 +347,65 @@ class MyGameApp(App):
             self.bomb.update_bomb_button_state()
 
     def show_high_scores_popup(self, instance):
+        score_text = self.get_high_scores_text()
+        content_layout = self.create_popup_layout(score_text)
+        popup = Popup(title='High Scores', content=content_layout, size_hint=(0.5, 0.5))
+        popup.open()
+
+    def get_high_scores_text(self):
         high_scores = self.game_logic.get_high_scores()
         last_five_scores = high_scores[-5:] if len(high_scores) > 5 else high_scores
         score_text = "\n".join([f"{i + 1}. {score}" for i, score in enumerate(last_five_scores)])
+        return score_text
+
+    def create_popup_layout(self, score_text):
         content_layout = BoxLayout(orientation='vertical', padding=10, spacing=10)
+        score_label = self.create_score_label(score_text)
+        content_layout.add_widget(score_label)
+        mute_button = self.create_mute_button()
+        bomb_button = self.create_bomb_button()
+        content_layout.add_widget(mute_button)
+        content_layout.add_widget(bomb_button)     
+        return content_layout
+
+    def create_score_label(self, score_text):
         score_label = Label(text=score_text, halign="center", valign="middle", font_size='40sp')
         score_label.bind(size=score_label.setter('text_size'))
-        content_layout.add_widget(score_label)
+        return score_label
+
+    def create_mute_button(self):   
         mute_button = Button(size_hint=(1, 0.2))
-        bomb_button = Button(text="Bomb Off", size_hint=(1, 0.2))
-        if not hasattr(self, 'sound_manager'):
-            self.sound_manager = SoundManager()
-        if self.sound_manager.is_muted:
-            mute_button.text = "Unmute"
-        else:
-            mute_button.text = "Mute"
+        mute_button.text = "Unmute" if self.sound_manager.is_muted else "Mute"
+        mute_button.bind(on_press=self.toggle_mute)
+        return mute_button
 
-        def toggle_mute(instance):
-            self.sound_manager.toggle_mute()
-            if self.sound_manager.is_muted:
-                mute_button.text = "Unmute"
-            else:
-                mute_button.text = "Mute"
-                self.sound_manager.play_background_music()
+    def toggle_mute(self, instance):
+        self.sound_manager.toggle_mute()
+        instance.text = "Unmute" if self.sound_manager.is_muted else "Mute"
+        if not self.sound_manager.is_muted:
+            self.sound_manager.play_background_music()
 
-        def toggle_bomb(instance):
-            self.bomb_disabled = not self.bomb_disabled
-            bomb_button.text = "Bomb Off" if not self.bomb_disabled else "Bomb On"
-            self.bomb.update_bomb_button_state()
-            self.update_bomb_info_label()
-        mute_button.bind(on_press=toggle_mute)
-        bomb_button.bind(on_press=toggle_bomb)
-        content_layout.add_widget(mute_button)
-        content_layout.add_widget(bomb_button)
-        popup = Popup(title='High Scores', content=content_layout, size_hint=(0.5, 0.5))
-        popup.open()
+    def create_bomb_button(self):
+        bomb_button = Button(
+            text="Bomb On" if self.bomb_disabled else "Bomb Off",
+            size_hint=(1, 0.2)
+        )
+        bomb_button.bind(on_press=self.toggle_bomb)
+        return bomb_button
+
+    def toggle_bomb(self, instance):
+        self.bomb_disabled = not self.bomb_disabled
+        instance.text = "Bomb On" if self.bomb_disabled else "Bomb Off"
+        self.bomb.update_bomb_button_state()
+        self.update_bomb_info_label()
 
     def build(self):
         # aspect_ratio = 16 / 9
         # width = Window.width
         # Window.size = (width, int(width * aspect_ratio))
         # Window.size = (600, 1000)
-        # Window.size = (540, 1200)
-        Window.fullscreen = 'auto'
+        Window.size = (540, 1200)
+        # Window.fullscreen = 'auto'
         parent = RelativeLayout()
         parent.add_widget(Image(source=BACKGR, fit_mode='cover'))
         main_layout = BoxLayout(orientation='vertical')    

@@ -39,10 +39,6 @@ class GameLogic:
             "diagonal2": [(-1, 1), (1, -1)]
         }
 
-    def update_font_size(self, label):
-        window_height = Window.size[1]
-        label.font_size = window_height * 0.09
-
     def clear_button_colors(self, buttons):
         self.sound_manager.play_sound('complete_line')
         buttons_to_remove = []
