@@ -200,10 +200,12 @@ class GameLogic:
 
     def create_trail_effect(self, position):
         button = self.game.grid_buttons[position[0] * 9 + position[1]]
+        size_hint_x = button.width / Window.width
+        size_hint_y = button.height / Window.height
         trail_button = Button(
             background_normal=button.background_normal,
             background_color=[1, 1, 1, 0.3],
-            size_hint=(0.11, 0.047),
+            size_hint=(size_hint_x, size_hint_y),
             pos_hint={"x": button.x / Window.width, "y": button.y / Window.height}
         )
         self.game.root.add_widget(trail_button)

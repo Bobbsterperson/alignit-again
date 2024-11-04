@@ -111,7 +111,7 @@ class MyGameApp(App):
         buttons_layout = BoxLayout(orientation='horizontal', size_hint=(1, 1), spacing=10)
         for color in self.current_colors:
             color_button = Button(background_normal=color, size_hint=(None, None))
-            color_button.bind(on_press=lambda btn, color=color: self.highlight_matching_buttons(color))
+            color_button.bind(on_press=lambda btn, color=color: self.game_logic.highlight_matching_buttons(color))
             buttons_layout.add_widget(color_button)  
             self.color_buttons.append(color_button)
         self.bomb_button = Button(background_normal='icons/bomb.jpg', size_hint=(None, None))
@@ -251,8 +251,8 @@ class MyGameApp(App):
         # width = Window.width
         # Window.size = (width, int(width * aspect_ratio))
         # Window.size = (600, 1000)
-        Window.size = (540, 1200)
-        # Window.fullscreen = 'auto'
+        # Window.size = (540, 1200)
+        Window.fullscreen = 'auto'
         parent = RelativeLayout()
         parent.add_widget(Image(source=BACKGR, fit_mode='cover'))
         main_layout = BoxLayout(orientation='vertical')    

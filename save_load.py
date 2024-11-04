@@ -52,7 +52,7 @@ class GameLoader:
                 self.game.game_logic.space_info()
         except FileNotFoundError:
             print("No saved game")
-            Clock.schedule_once(lambda dt: self.game.assign_random_colors_to_buttons(), 0)
+            Clock.schedule_once(lambda dt: self.game.game_logic.assign_random_colors_to_buttons(), 0)
 
     def save_and_exit(self, instance):
         if self.game.is_moving or self.game.is_animation_running:
