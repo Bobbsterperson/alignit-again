@@ -1,12 +1,8 @@
 from kivy.animation import Animation
-from game_logic import GameLogic
-from sound import SoundManager
 
 class Bomb:
     def __init__(self, game):
-        self.game = game
-        self.sound_manager = SoundManager()
-        self.game_logic = GameLogic(self.game)
+        self.game = game       
 
     def use_bomb(self, instance):
             if self.game.selected_button:
@@ -19,7 +15,7 @@ class Bomb:
                     for i in range(max(0, row - 1), min(9, row + 2)):
                         for j in range(max(0, col - 1), min(9, col + 2)):
                             affected_buttons.append(self.game.grid_buttons[i * 9 + j])
-                    self.sound_manager.play_sound('bomb')
+                    self.game.sound_manager.play_sound('bomb')
                     self.bomb_visual_effect(affected_buttons)
                     for button in affected_buttons:
                         button.background_normal = ''
@@ -27,8 +23,8 @@ class Bomb:
                         self.game.grid_state[button.row][button.col] = 0
                     self.game.selected_button.background_color = [1, 1, 1, 1]
                     self.game.selected_button = None
-                    self.game_logic.cleanup_free_spaces()
-                    self.game.space_info()
+                    self.game.game_logic.cleanup_free_spaces()
+                    self.game.game_logic.space_info()
                 else:
                     print("No bomb uses left!")
             else:

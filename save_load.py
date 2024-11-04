@@ -1,18 +1,11 @@
 import json
-from kivy.app import App
-from sound import SoundManager
-from game_logic import GameLogic
 import random
 from constants import *
-from bomb import Bomb
 from kivy.clock import Clock
 
 class GameLoader:
     def __init__(self, game):
         self.game = game
-        self.sound_manager = SoundManager()
-        self.game_logic = GameLogic(self.game)
-        self.bomb = Bomb(self.game)
 
     def save_game(self):
         self.game.sound_manager.play_sound('ui')
@@ -30,7 +23,7 @@ class GameLoader:
                 } for button in self.game.grid_buttons
             ],
             'score': self.game.score,
-            'high_scores': self.game_logic.get_high_scores(),
+            'high_scores': self.game.game_logic.get_high_scores(),
             'bomb_uses': self.game.bomb_uses,
             'need': self.game.need,
             'bomb_disabled': self.game.bomb_disabled,
@@ -45,7 +38,7 @@ class GameLoader:
                 game_state = json.load(f)
                 self.game.grid_state = game_state['grid_state']
                 self.game.score = game_state['score']
-                self.game_logic.update_score_label()
+                self.game.game_logic.update_score_label()
                 for button, button_state in zip(self.game.grid_buttons, game_state['button_states']):
                     button.background_normal = button_state['image']
                     button.background_color = button_state['opacity']
@@ -54,9 +47,9 @@ class GameLoader:
                 self.game.bomb_disabled = game_state.get('bomb_disabled', False)
                 self.game.sound_manager.is_muted = game_state.get('muted', False)
                 self.game.update_bomb_info_label()
-                self.bomb.update_bomb_button_state()
+                self.game.bomb.update_bomb_button_state()
                 self.game.check_score_for_bomb(0)
-                self.game.space_info()
+                self.game.game_logic.space_info()
         except FileNotFoundError:
             print("No saved game")
             Clock.schedule_once(lambda dt: self.game.assign_random_colors_to_buttons(), 0)
@@ -65,12 +58,12 @@ class GameLoader:
         if self.game.is_moving or self.game.is_animation_running:
             return
         else:
-            self.sound_manager.stop_sound('background_music')
+            self.game.sound_manager.stop_sound('background_music')
             self.save_game()
-            App.get_running_app().stop()
+            self.game.get_running_app().stop()
 
     def reset_game(self, instance):
-        self.sound_manager.play_sound('ui')
+        self.game.sound_manager.play_sound('ui')
         if self.game.is_moving or self.game.is_animation_running:
             return
         self.game.score = 0
@@ -87,7 +80,7 @@ class GameLoader:
         self.game.next_colors = random.sample(COLOR_BUTTONS, 3)
         self.game.bomb_uses = 0
         self.game.need = 0
-        self.bomb.update_bomb_button_state()
-        self.game.assign_random_colors_to_buttons()
-        self.game_logic.cleanup_free_spaces()
-        self.game.space_info()
+        self.game.bomb.update_bomb_button_state()
+        self.game.game_logic.assign_random_colors_to_buttons()
+        self.game.game_logic.cleanup_free_spaces()
+        self.game.game_logic.space_info()

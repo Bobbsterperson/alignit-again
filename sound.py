@@ -10,14 +10,13 @@ class SoundManager:
             'complete_line': SoundLoader.load('icons/complete_line.wav'),
             'gameover': SoundLoader.load('icons/flatline.wav'),
             'background_music': SoundLoader.load('icons/thesong.mp3'),
-            'bomb': SoundLoader.load('icons/bomb.wav')
+            'bomb': SoundLoader.load('icons/bomb.mp3')
         }
-        # self.sounds['gameover'].volume = 0.4
-        # self.sounds['background_music'].volume = 0.4
-        # self.sounds['bomb'].volume = 0.4
         self.sounds['gameover'].volume = 1
         self.sounds['background_music'].volume = 1
         self.sounds['bomb'].volume = 1
+        if self.sounds['background_music']:
+            self.sounds['background_music'].loop = True
         self.is_muted = False
 
     def play_sound(self, sound_name):
@@ -31,7 +30,6 @@ class SoundManager:
             self.sounds[sound_name].stop()
 
     def stop_all_sounds(self):
-        """Stop all loaded sounds."""
         for sound in self.sounds.values():
             if sound:
                 sound.stop()
@@ -44,6 +42,5 @@ class SoundManager:
             self.play_sound('background_music')
 
     def play_background_music(self):
-        """Method to play the background music."""
-        if not self.is_muted:
+        if not self.is_muted and self.sounds['background_music']:
             self.sounds['background_music'].play()

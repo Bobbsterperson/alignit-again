@@ -27,7 +27,7 @@ class Movement:
     def move_color(self, current_pos, next_pos):
         colored_button = self.game.grid_buttons[current_pos[0] * 9 + current_pos[1]]
         normal_button = self.game.grid_buttons[next_pos[0] * 9 + next_pos[1]]
-        self.game.create_trail_effect(current_pos)
+        self.game.game_logic.create_trail_effect(current_pos)
         self.move_color_to_normal_button(colored_button, normal_button)
 
     def move_color_to_normal_button(self, colored_button, normal_button):
@@ -43,13 +43,13 @@ class Movement:
     def finalize_move(self, final_pos):
         self.game.is_moving = False
         self.game.is_animation_running = False
-        self.game.check_line_of_same_color(self.game.grid_buttons[final_pos[0] * 9 + final_pos[1]])
+        self.game.game_logic.check_line_of_same_color(self.game.grid_buttons[final_pos[0] * 9 + final_pos[1]])
         self.handle_post_move_updates()
 
     def handle_post_move_updates(self):
         if not self.game.lines_cleared:
             self.game.next_colors = self.game.current_colors
             self.game.update_color_buttons()
-            self.game.assign_random_colors_to_buttons()
+            self.game.game_logic.assign_random_colors_to_buttons()
         self.game.lines_cleared = False
-        self.game.space_info()
+        self.game.game_logic.space_info()
