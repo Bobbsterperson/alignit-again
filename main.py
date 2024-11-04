@@ -17,6 +17,9 @@ from constants import *
 from movement import Movement
 from save_load import GameLoader
 from bomb import Bomb
+from sprite import SpriteSheet
+from kivy.graphics import Rectangle, Color
+
 
 class MyGameApp(App):
     def __init__(self, **kwargs):
@@ -42,10 +45,9 @@ class MyGameApp(App):
 
     def create_top_layout(self):
         top_layout = BoxLayout(orientation='horizontal', size_hint_y=0.1, padding=10, spacing=10)
-        reset_button = Button(background_normal='icons/restart.png', size_hint=(None, None), size=(50, 50))
+        reset_button = Button(background_normal="icons/restart.png", size_hint=(None, None), size=(50, 50))
         save_exit_button = Button(background_normal='icons/savexit.png', size_hint=(None, None), size=(50, 50))      
         self.score_label = Label(text='0000', size_hint=((None, None)))
-        self.update_score_font_size()
         Window.bind(on_resize=self.on_window_resize)
         score_button = Button(background_normal='icons/score.png', size_hint=(None, None), size=(50, 50))
         reset_button.bind(on_press=self.svld.reset_game)
@@ -58,18 +60,15 @@ class MyGameApp(App):
         top_layout.bind(size=self.update_top_button_sizes)
         return top_layout
 
-    def calculate_dynamic_font_size(self, base_font_ratio=0.05):
+    def calculate_dynamic_font_size(self, base_font_ratio=0.1):
         screen_width_inches = Window.width / Window.dpi
         screen_height_inches = Window.height / Window.dpi
         min_dimension_inches = min(screen_width_inches, screen_height_inches)
         return f"{int(min_dimension_inches * Window.dpi * base_font_ratio)}sp"
 
-    def update_score_font_size(self):
-            self.score_label.font_size = self.calculate_dynamic_font_size(base_font_ratio=0.06)
-
     def on_window_resize(self, *args):
-        self.update_score_font_size()
-        self.bomb_info_label.font_size = self.calculate_dynamic_font_size(base_font_ratio=0.05)
+        self.score_label.font_size = self.calculate_dynamic_font_size()
+        self.bomb_info_label.font_size = self.calculate_dynamic_font_size()
         self.update_grid_size()
 
     def update_grid_size(self):
@@ -77,15 +76,14 @@ class MyGameApp(App):
         self.root.children[0].children[0].children[1].size = (square_size, square_size)
 
     def update_top_button_sizes(self, instance, size):
-        button_count = len(instance.children)
-        button_width = size[0] / button_count * 0.8
+        button_count = len(instance.children) + 1
+        button_width = size[0] / button_count
         for button in instance.children:
             if isinstance(button, Button):
                 button.size_hint = (None, None)
                 button.size = (button_width, button_width)
-        self.score_label.size_hint = (1, None)
+        self.score_label.size_hint = (1 , None)
         self.score_label.height = button_width
-        self.update_score_font_size()
     
     def create_the_layouts(self):
         color_buttons_layout = self.create_color_buttons_layout()
@@ -110,6 +108,8 @@ class MyGameApp(App):
         self.bomb_button.size = (width, width)
         self.bomb_info_label.size_hint = (None, None)
         self.bomb_info_label.size = (width, width)
+        # self.score_label.size_hint = (None, None)
+        # self.score_label.size = (width, width) 
     
     def highlight_matching_buttons(self, color):
         matching_buttons = [button for button in self.grid_buttons if button.background_normal == color]
@@ -145,7 +145,7 @@ class MyGameApp(App):
         self.color_buttons_layout.add_widget(buttons_layout)
         self.color_buttons_layout.add_widget(self.bomb_info_label)
         self.color_buttons_layout.bind(size=self.update_button_sizes)
-        self.update_button_sizes(self.color_buttons_layout, self.color_buttons_layout.size)  # 
+        self.update_button_sizes(self.color_buttons_layout, self.color_buttons_layout.size)
         self.bomb.update_bomb_button_state()
 
     def create_grid_layout(self):
@@ -323,9 +323,6 @@ class MyGameApp(App):
         best_score = high_scores[0] if high_scores else 0
         content = BoxLayout(orientation='vertical')
         game_over_label = Label(text=f"Score: {self.score}", font_size=FONT_SIZE_GAME_OVER)
-        if self.score > best_score:
-            best_score_label = Label(text="New Best Score!", font_size=FONT_SIZE_HIGH_SCORE, color=(1, 0.8, 0, 1))
-            content.add_widget(best_score_label)
         restart_button = Button(text="Restart", size_hint=(1, 0.4))
         content.add_widget(game_over_label)
         content.add_widget(restart_button)
@@ -367,9 +364,7 @@ class MyGameApp(App):
         return content_layout
 
     def create_score_label(self, score_text):
-        score_label = Label(text=score_text, halign="center", valign="middle", font_size='40sp')
-        score_label.bind(size=score_label.setter('text_size'))
-        return score_label
+        return Label(text=score_text, font_size=self.calculate_dynamic_font_size())
 
     def create_mute_button(self):   
         mute_button = Button(size_hint=(1, 0.2))
@@ -397,12 +392,14 @@ class MyGameApp(App):
         self.bomb.update_bomb_button_state()
         self.update_bomb_info_label()
 
+
+
     def build(self):
         # aspect_ratio = 16 / 9
         # width = Window.width
         # Window.size = (width, int(width * aspect_ratio))
-        # Window.size = (600, 1000)
-        Window.size = (540, 1200)
+        Window.size = (600, 1000)
+        # Window.size = (540, 1200)
         # Window.fullscreen = 'auto'
         parent = RelativeLayout()
         parent.add_widget(Image(source=BACKGR, fit_mode='cover'))
