@@ -39,11 +39,11 @@ class MyGameApp(App):
         self.color_buttons = []
 
     def create_top_layout(self):
+        
         top_layout = BoxLayout(orientation='horizontal', size_hint_y=0.1, padding=10, spacing=10)
         reset_button = Button(background_normal="icons/restart.png", size_hint=(None, None), size=(50, 50))
         save_exit_button = Button(background_normal='icons/savexit.png', size_hint=(None, None), size=(50, 50))      
-        self.score_label = Label(text='0000', font_size=self.calculate_dynamic_font_size())
-        Window.bind(on_resize=self.on_window_resize)
+        self.score_label = Label(text='0000', font_size="10sp")
         score_button = Button(background_normal='icons/score.png', size_hint=(None, None), size=(50, 50))
         reset_button.bind(on_press=self.svld.reset_game)
         save_exit_button.bind(on_press=self.svld.save_and_exit)
@@ -53,19 +53,14 @@ class MyGameApp(App):
         top_layout.add_widget(self.score_label)
         top_layout.add_widget(score_button)
         top_layout.bind(size=self.update_top_button_sizes)
+        top_layout.bind(size=self.update_score_font_size)
         return top_layout
+    
 
-    def calculate_dynamic_font_size(self, base_font_ratio=0.1):
-        screen_width_inches = Window.width / Window.dpi
-        screen_height_inches = Window.height / Window.dpi
-        min_dimension_inches = min(screen_width_inches, screen_height_inches)
-        return f"{int(min_dimension_inches * Window.dpi * base_font_ratio)}sp"
-
-    def on_window_resize(self, *args):
-        self.score_label.font_size = self.calculate_dynamic_font_size(base_font_ratio=0.1)
-        self.bomb_info_label.font_size = self.calculate_dynamic_font_size()
-        self.update_grid_size()
-
+    def update_score_font_size(self, instance, size):
+        self.score_label.font_size = size[0] / 7
+        
+        
     def update_grid_size(self):
         square_size = min(Window.width, Window.height) * 0.5
         self.root.children[0].children[0].children[1].size = (square_size, square_size)
@@ -101,8 +96,6 @@ class MyGameApp(App):
             button.size_hint = (None, None)
             button.size = (width, width)
         self.bomb_button.size = (width, width)
-        self.bomb_info_label.size_hint = (None, None)
-        self.bomb_info_label.size = (width, width)
 
     def update_color_buttons(self):
         self.color_buttons_layout.clear_widgets()
@@ -119,17 +112,17 @@ class MyGameApp(App):
         buttons_layout.add_widget(self.bomb_button)
         self.bomb_info_label = Label(
             text=f'{SCORE_NEEDED_FOR_BOMB - self.need}', 
-            font_size=self.calculate_dynamic_font_size(),
-            size_hint=(None, None), 
-            halign='right', 
-            valign='middle',
-            padding=(10, 0)
+            size_hint=(0.4, None), 
         )
         self.color_buttons_layout.add_widget(buttons_layout)
         self.color_buttons_layout.add_widget(self.bomb_info_label)
         self.color_buttons_layout.bind(size=self.update_button_sizes)
         self.update_button_sizes(self.color_buttons_layout, self.color_buttons_layout.size)
         self.bomb.update_bomb_button_state()
+        buttons_layout.bind(size=self.update_bomb_font_size)
+    
+    def update_bomb_font_size(self, instance, size):
+        self.bomb_info_label.font_size = size[0] / 7
 
     def create_grid_layout(self):
         grid_layout = GridLayout(cols=9, rows=9, size_hint=(None, None), spacing=4)
@@ -147,7 +140,6 @@ class MyGameApp(App):
         return grid_layout
     
     def on_button_click(self, button):
-        print(self.bomb_uses)
         self.bomb.update_bomb_button_state()
         self.game_logic.cleanup_free_spaces()
         self.sound_manager.play_sound('click_button')
@@ -218,7 +210,7 @@ class MyGameApp(App):
         return content_layout
 
     def create_five_best_score(self, score_text):
-        return Label(text=score_text, font_size=self.calculate_dynamic_font_size())
+        return Label(text=score_text, font_size=self.score_label.width / 6)
 
     def create_mute_button(self):   
         mute_button = Button(size_hint=(1, 0.2))
@@ -251,8 +243,9 @@ class MyGameApp(App):
         # width = Window.width
         # Window.size = (width, int(width * aspect_ratio))
         # Window.size = (600, 1000)
+        Window.size = (1200, 2000)
         # Window.size = (540, 1200)
-        Window.fullscreen = 'auto'
+        # Window.fullscreen = 'auto'
         parent = RelativeLayout()
         parent.add_widget(Image(source=BACKGR, fit_mode='cover'))
         main_layout = BoxLayout(orientation='vertical')    
@@ -260,6 +253,7 @@ class MyGameApp(App):
         main_layout.add_widget(top_layout)
         main_layout.add_widget(self.create_the_layouts())
         parent.add_widget(main_layout)
+        
         self.svld.load_game()
         self.next_colors = random.sample(COLOR_BUTTONS, 3)
         self.sound_manager.play_sound('background_music')
