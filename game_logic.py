@@ -213,6 +213,7 @@ class GameLogic:
 
     def remove_trail(self, trail_button):
         self.game.root.remove_widget(trail_button)
+        self.cleanup_free_spaces()
 
     def check_for_free_pos(self):
         return [button for button in self.game.grid_buttons if self.game.grid_state[button.row][button.col] == 0]
