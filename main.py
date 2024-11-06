@@ -97,10 +97,13 @@ class MyGameApp(App):
             button.size = (width, width)
         self.bomb_button.size = (width, width)
 
-    def update_color_buttons(self):
+    def update_color_buttons(self, saved_colors=None):
         self.color_buttons_layout.clear_widgets()
         self.color_buttons = []
-        self.current_colors = random.sample(COLOR_BUTTONS, 3)
+        if saved_colors:
+            self.current_colors = saved_colors
+        else:
+            self.current_colors = random.sample(COLOR_BUTTONS, 3)
         buttons_layout = BoxLayout(orientation='horizontal', size_hint=(1, 1), spacing=10)
         for color in self.current_colors:
             color_button = Button(background_normal=color, size_hint=(None, None))
@@ -120,6 +123,7 @@ class MyGameApp(App):
         self.update_button_sizes(self.color_buttons_layout, self.color_buttons_layout.size)
         self.bomb.update_bomb_button_state()
         buttons_layout.bind(size=self.update_bomb_font_size)
+        print(self.color_buttons)
     
     def update_bomb_font_size(self, instance, size):
         self.bomb_info_label.font_size = size[0] / 7
@@ -177,8 +181,6 @@ class MyGameApp(App):
 
     def show_game_over_popup(self):
         self.sound_manager.play_sound('gameover')
-        high_scores = self.game_logic.get_high_scores()
-        best_score = high_scores[0] if high_scores else 0
         content = BoxLayout(orientation='vertical')
         game_over_label = Label(text=f"Score: {self.score}", font_size=FONT_SIZE_GAME_OVER)
         restart_button = Button(text="Restart", size_hint=(1, 0.4))
@@ -242,8 +244,8 @@ class MyGameApp(App):
         # aspect_ratio = 16 / 9
         # width = Window.width
         # Window.size = (width, int(width * aspect_ratio))
-        # Window.size = (600, 1000)
-        Window.size = (1200, 2000)
+        Window.size = (600, 1000)
+        # Window.size = (1200, 2000)
         # Window.size = (540, 1200)
         # Window.fullscreen = 'auto'
         parent = RelativeLayout()

@@ -14,6 +14,7 @@ class GameLoader:
         if self.game.selected_button:
             self.game.selected_button.background_color = [1, 1, 1, 1]
             self.game.selected_button = None
+        color_buttons_data = [btn.background_normal for btn in self.game.color_buttons]
         game_state = {
             'grid_state': self.game.grid_state,
             'button_states': [
@@ -27,7 +28,8 @@ class GameLoader:
             'bomb_uses': self.game.bomb_uses,
             'need': self.game.need,
             'bomb_disabled': self.game.bomb_disabled,
-            'muted': self.game.sound_manager.is_muted
+            'muted': self.game.sound_manager.is_muted,
+            'color_buttons': color_buttons_data
         }
         with open('game_save.json', 'w') as f:
             json.dump(game_state, f)
@@ -46,6 +48,11 @@ class GameLoader:
                 self.game.need = game_state.get('need', 0)
                 self.game.bomb_disabled = game_state.get('bomb_disabled', False)
                 self.game.sound_manager.is_muted = game_state.get('muted', False)
+                color_buttons_data = game_state.get('color_buttons', [])
+                if color_buttons_data:
+                    self.game.update_color_buttons(saved_colors=color_buttons_data)
+                else:
+                    self.game.update_color_buttons()
                 self.game.update_bomb_info_label()
                 self.game.bomb.update_bomb_button_state()
                 self.game.check_score_for_bomb(0)

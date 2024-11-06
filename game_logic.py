@@ -51,7 +51,7 @@ class GameLogic:
         for button in buttons:
             buttons_to_remove.append(button)
             button.disabled = True
-            self.is_animation_running = True
+            self.game.is_animation_running = True
             anim = Animation(background_color=[1, 1, 0, 1], duration=0.2)
             anim += Animation(background_color=[1, 1, 1, 0.5], duration=0.3)
             anim.bind(on_complete=lambda anim, value: remove_all_buttons(anim, value))
@@ -121,7 +121,7 @@ class GameLogic:
         for button in buttons:
             buttons_to_remove.append(button)
             button.disabled = True
-            self.is_animation_running = True
+            self.game.is_animation_running = True
             anim = Animation(background_color=[1, 1, 0, 1], duration=0.2)
             anim += Animation(background_color=[1, 1, 1, 0.5], duration=0.3)
             anim.bind(on_complete=lambda anim, value: remove_all_buttons(anim, value))
@@ -188,14 +188,14 @@ class GameLogic:
             self.cleanup_free_spaces()
 
     def highlight_new_button(self, button):
-        self.is_animation_running = True
+        self.game.is_animation_running = True
         anim = Animation(background_color=[3, 3, 3, 1], duration=0.3)
         anim += Animation(background_color=[1, 1, 1, 1], duration=0.2)
         anim.bind(on_complete=self.animation_complete)
         anim.start(button)
 
     def animation_complete(self, animation, widget):
-        self.is_animation_running = False
+        self.game.is_animation_running = False
         self.cleanup_free_spaces()
 
     def create_trail_effect(self, position):
