@@ -103,7 +103,6 @@ class GameLogic:
                 line = self.check_direction(button, vectors, initial_color, color_to_check)
                 if len(line) >= 5:
                     all_line_positions.update(line)
-        self.increase_score_by(len(all_line_positions))
         if all_line_positions:
             self.clear_button_colors(all_line_positions)
             self.lines_cleared = True
@@ -184,6 +183,7 @@ class GameLogic:
 
     def check_for_game_over(self):
         if all(all(cell != 0 for cell in row) for row in self.game.grid_state):
+            self.game.svld.save_game()
             self.game.show_game_over_popup()
             self.cleanup_free_spaces()
 
