@@ -38,8 +38,7 @@ class MyGameApp(App):
         self.svld = GameLoader(self)
         self.color_buttons = []
 
-    def create_top_layout(self):
-        
+    def create_top_layout(self):   
         top_layout = BoxLayout(orientation='horizontal', size_hint_y=0.1, padding=10, spacing=10)
         reset_button = Button(background_normal="icons/restart.png", size_hint=(None, None), size=(50, 50))
         save_exit_button = Button(background_normal='icons/savexit.png', size_hint=(None, None), size=(50, 50))      
@@ -47,7 +46,7 @@ class MyGameApp(App):
         score_button = Button(background_normal='icons/score.png', size_hint=(None, None), size=(50, 50))
         reset_button.bind(on_press=self.svld.reset_game)
         save_exit_button.bind(on_press=self.svld.save_and_exit)
-        score_button.bind(on_press=self.game_logic.show_high_scores_popup)
+        score_button.bind(on_press=self.show_high_scores_popup)
         top_layout.add_widget(reset_button)
         top_layout.add_widget(save_exit_button)
         top_layout.add_widget(self.score_label)
@@ -55,11 +54,9 @@ class MyGameApp(App):
         top_layout.bind(size=self.update_top_button_sizes)
         top_layout.bind(size=self.update_score_font_size)
         return top_layout
-    
 
     def update_score_font_size(self, instance, size):
-        self.score_label.font_size = size[0] / 7
-        
+        self.score_label.font_size = size[0] / 7       
         
     def update_grid_size(self):
         square_size = min(Window.width, Window.height) * 0.5
@@ -150,6 +147,8 @@ class MyGameApp(App):
         if self.is_moving or self.is_animation_running:
             return
         if self.selected_button and self.selected_button.background_normal in COLOR_BUTTONS:
+
+
             if self.grid_state[button.row][button.col] == 0:
                 start = (self.selected_button.row, self.selected_button.col)
                 end = (button.row, button.col)
@@ -161,7 +160,6 @@ class MyGameApp(App):
                     self.game_logic.cleanup_free_spaces()
                 else:
                     self.sound_manager.play_sound('no_path')
-                    print("No free path available")
                     self.game_logic.cleanup_free_spaces()
             else:
                 self.selected_button.background_color = [1, 1, 1, 1]
@@ -193,6 +191,12 @@ class MyGameApp(App):
     def update_bomb_info_label(self):
         self.bomb_info_label.text = f'{SCORE_NEEDED_FOR_BOMB - self.need}' if not self.bomb_disabled else ""
         self.bomb.update_bomb_button_state()
+
+    def show_high_scores_popup(self, instance):
+        score_text = self.game_logic.get_high_scores_text()
+        content_layout = self.create_popup_layout(score_text)
+        popup = Popup(title='High Scores', content=content_layout, size_hint=(0.5, 0.5))
+        popup.open()
 
     def check_score_for_bomb(self, count):
         self.need += count

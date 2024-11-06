@@ -1,6 +1,6 @@
 import json
 import random
-from constants import *
+from constants import COLOR_BUTTONS
 from kivy.clock import Clock
 
 class GameLoader:
@@ -24,7 +24,7 @@ class GameLoader:
                 } for button in self.game.grid_buttons
             ],
             'score': self.game.score,
-            'high_scores': self.game.game_logic.get_high_scores(),
+            'high_scores': self.game.svld.get_high_scores(),
             'bomb_uses': self.game.bomb_uses,
             'need': self.game.need,
             'bomb_disabled': self.game.bomb_disabled,
@@ -91,3 +91,17 @@ class GameLoader:
         self.game.game_logic.assign_random_colors_to_buttons()
         self.game.game_logic.cleanup_free_spaces()
         self.game.game_logic.space_info()
+
+    def get_high_scores(self):
+        self.game.sound_manager.play_sound('ui')
+        try:
+            with open('high_scores.json', 'r') as f:
+                high_scores = json.load(f)
+        except FileNotFoundError:
+            high_scores = []
+        if self.game.score > (high_scores[0] if high_scores else 0):
+            high_scores.append(self.game.score)
+            high_scores = sorted(set(high_scores), reverse=True)[:5]
+            with open('high_scores.json', 'w') as f:
+                json.dump(high_scores, f)
+        return high_scores
