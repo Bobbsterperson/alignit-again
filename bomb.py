@@ -1,4 +1,3 @@
-from kivy.animation import Animation
 
 class Bomb:
     def __init__(self, game):
@@ -16,7 +15,7 @@ class Bomb:
                         for j in range(max(0, col - 1), min(9, col + 2)):
                             affected_buttons.append(self.game.grid_buttons[i * 9 + j])
                     self.game.sound_manager.play_sound('bomb')
-                    self.bomb_visual_effect(affected_buttons)
+                    self.game.game_logic.bomb_visual_effect(affected_buttons)
                     for button in affected_buttons:
                         button.background_normal = ''
                         button.background_color = [0, 0, 0, 0.5]
@@ -29,16 +28,6 @@ class Bomb:
                     print("No bomb uses left!")
             else:
                 print("No button selected to use the bomb.")
-
-    def bomb_visual_effect(self, affected_buttons):
-        for button in affected_buttons:
-            original_scale = button.size_hint[:]
-            scale_up = Animation(size_hint=(1.2, 1.2), duration=0.1)
-            scale_down = Animation(size_hint=original_scale, duration=0.1)
-            color_change = Animation(background_color=(1, 0, 0, 1), duration=0.1) + Animation(background_color=(0, 0, 0, 0.5), duration=0.2)
-            scale_up.start(button)
-            scale_down.start(button)
-            color_change.start(button)
             
     def remove_explosion(self, explosion):
         self.root.remove_widget(explosion)

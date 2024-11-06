@@ -11,7 +11,5 @@ COLOR_BUTTONS = ['icons/blue.png',
                  'icons/yellow.png', 
                  CROWN]
 BACKGR = 'icons/background.png'
-
 FONT_SIZE_GAME_OVER = '50sp'
-FONT_SIZE_HIGH_SCORE = '40sp'
 

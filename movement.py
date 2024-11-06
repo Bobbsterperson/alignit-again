@@ -1,4 +1,3 @@
-from kivy.clock import Clock
 
 class Movement:
     def __init__(self, game):
@@ -8,21 +7,13 @@ class Movement:
         self.game.sound_manager.play_sound('moving_button')
         if not self.game.is_moving:
             self.start_move()
-        self.process_movement_step()
+        self.game.game_logic.process_movement_step()
 
     def start_move(self):
         self.game.is_moving = True
         self.game.is_animation_running = True
 
-    def process_movement_step(self):
-        current_pos = self.game.move_path.pop(0)
-        next_pos = self.game.move_path[0]
-        self.move_color(current_pos, next_pos)
-        if len(self.game.move_path) > 1:
-            Clock.schedule_once(lambda dt: self.process_movement_step(), 0.1)
-            self.game.sound_manager.play_sound('moving_button')
-        else:
-            self.finalize_move(next_pos)
+
 
     def move_color(self, current_pos, next_pos):
         colored_button = self.game.grid_buttons[current_pos[0] * 9 + current_pos[1]]
