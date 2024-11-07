@@ -43,6 +43,13 @@ class GameLoader:
                 self.game.score = game_state['score']
                 self.game.game_logic.update_score_label()
                 self.game.easy_mode = game_state.get('easy_mode', False)
+                high_scores_file = 'easy_high_scores.json' if self.game.easy_mode else 'normal_high_scores.json'
+                try:
+                    with open(high_scores_file, 'r') as high_scores_f:
+                        high_scores = json.load(high_scores_f)
+                        self.game.high_scores = high_scores
+                except FileNotFoundError:
+                    self.game.high_scores = []
                 for button, button_state in zip(self.game.grid_buttons, game_state['button_states']):
                     button.background_normal = button_state['image']
                     button.background_color = button_state['opacity']
@@ -61,6 +68,7 @@ class GameLoader:
                 self.game.game_logic.space_info()
         except FileNotFoundError:
             Clock.schedule_once(lambda dt: self.game.game_logic.assign_random_colors_to_buttons(), 0)
+
 
     def save_and_exit(self, instance):
         if self.game.is_moving or self.game.is_animation_running:
@@ -100,13 +108,14 @@ class GameLoader:
     def get_high_scores(self):
         self.game.sound_manager.play_sound('ui')
         try:
-            with open('high_scores.json', 'r') as f:
+            file_name = 'easy_high_scores.json' if self.game.easy_mode else 'normal_high_scores.json'
+            with open(file_name, 'r') as f:
                 high_scores = json.load(f)
         except FileNotFoundError:
             high_scores = []
         if self.game.score > (high_scores[0] if high_scores else 0):
             high_scores.append(self.game.score)
             high_scores = sorted(set(high_scores), reverse=True)[:5]
-            with open('high_scores.json', 'w') as f:
+            with open(file_name, 'w') as f:
                 json.dump(high_scores, f)
         return high_scores

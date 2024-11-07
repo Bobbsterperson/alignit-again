@@ -80,12 +80,12 @@ class GameLogic:
 
     def get_high_scores(self):
         self.game.sound_manager.play_sound('ui')
+        high_scores_file = 'easy_high_scores.json' if self.game.easy_mode else 'normal_high_scores.json'        
         try:
-            with open('high_scores.json', 'r') as f:
+            with open(high_scores_file, 'r') as f:
                 high_scores = json.load(f)
         except FileNotFoundError:
-            high_scores = []
-
+            high_scores = []       
         return sorted(high_scores, reverse=True)[:5]
     
     def update_high_scores_if_needed(self):
@@ -93,7 +93,8 @@ class GameLogic:
         if self.game.score > (high_scores[0] if high_scores else 0):
             high_scores.append(self.game.score)
             high_scores = sorted(set(high_scores), reverse=True)[:5]
-            with open('high_scores.json', 'w') as f:
+            high_scores_file = 'easy_high_scores.json' if self.game.easy_mode else 'normal_high_scores.json'           
+            with open(high_scores_file, 'w') as f:
                 json.dump(high_scores, f)
     
     def check_line_of_same_color(self, button): 
