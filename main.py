@@ -34,10 +34,10 @@ class MyGameApp(App):
         self.bomb = Bomb(self)
         self.game_logic = GameLogic(self)
         self.movement = Movement(self)
-        self.bomb_disabled = False
+        self.bomb_disabled = True
         self.svld = GameLoader(self)
         self.color_buttons = []
-        self.easy_mode = False 
+        self.easy_mode = False
         self.color_set = COLOR_BUTTONS
 
     def create_top_layout(self):   
@@ -212,7 +212,7 @@ class MyGameApp(App):
         five_best_label = self.create_five_best_score(score_text)
         content_layout.add_widget(five_best_label)
         mute_button = self.create_mute_button()
-        easy_mode_button = self.create_easy_mode_button()
+        easy_mode_button = self.create_bomber_mode_button()
         content_layout.add_widget(mute_button)
         content_layout.add_widget(easy_mode_button)    
         return content_layout
@@ -248,7 +248,7 @@ class MyGameApp(App):
         self.bomb.update_bomb_button_state()
         self.update_bomb_info_label()
 
-    def create_easy_mode_button(self):
+    def create_bomber_mode_button(self):
         easy_mode_button = Button(
             text="Classic Mode" if self.easy_mode else "Bomber Mode",
             size_hint=(1, 0.15),
@@ -263,16 +263,21 @@ class MyGameApp(App):
         self.easy_mode = not self.easy_mode
         instance.text = "Classic Mode" if self.easy_mode else "Bomber Mode"
         self.color_set = EASY_COLOR_BUTTONS if self.easy_mode else COLOR_BUTTONS
+        if self.easy_mode:
+            self.bomb_disabled = False
+        else:
+            self.bomb_disabled = True      
+        self.update_bomb_button_text()
         self.update_color_buttons()
+        # self.svld.save_game()
         self.svld.reset_game(instance)
 
+    def update_bomb_button_text(self):
+        self.bomb_button.text = "Bomb Off" if not self.bomb_disabled else "Bomb On"
+        self.bomb.update_bomb_button_state()
+
     def build(self):
-        # aspect_ratio = 16 / 9
-        # width = Window.width
-        # Window.size = (width, int(width * aspect_ratio))
         Window.size = (600, 1000)
-        # Window.size = (1200, 1000)
-        # Window.size = (540, 1200)
         # Window.fullscreen = 'auto'
         parent = RelativeLayout()
         parent.add_widget(Image(source=BACKGR, fit_mode='cover'))
