@@ -58,7 +58,6 @@ class GameLoader:
                 self.game.check_score_for_bomb(0)
                 self.game.game_logic.space_info()
         except FileNotFoundError:
-            print("No saved game")
             Clock.schedule_once(lambda dt: self.game.game_logic.assign_random_colors_to_buttons(), 0)
 
     def save_and_exit(self, instance):
@@ -84,7 +83,7 @@ class GameLoader:
             button.background_color = [0, 0, 0, 0.5]
         self.game.color_buttons_layout.clear_widgets()
         self.game.update_color_buttons()
-        self.game.next_colors = random.sample(COLOR_BUTTONS, 3)
+        self.game.next_colors = random.sample(self.game.color_set, 3)
         self.game.bomb_uses = 0
         self.game.need = 0
         self.game.bomb.update_bomb_button_state()

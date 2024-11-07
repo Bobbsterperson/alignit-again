@@ -12,4 +12,8 @@ COLOR_BUTTONS = ['icons/blue.png',
                  CROWN]
 BACKGR = 'icons/background.png'
 FONT_SIZE_GAME_OVER = '50sp'
-
+EASY_COLOR_BUTTONS = ['icons/blue.png', 
+                 'icons/green.png', 
+                #  'icons/orange.png', 
+                #  'icons/pink.png', 
+                 CROWN]

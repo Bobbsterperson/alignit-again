@@ -37,6 +37,8 @@ class MyGameApp(App):
         self.bomb_disabled = False
         self.svld = GameLoader(self)
         self.color_buttons = []
+        self.easy_mode = False 
+        self.color_set = COLOR_BUTTONS
 
     def create_top_layout(self):   
         top_layout = BoxLayout(orientation='horizontal', size_hint_y=0.1, padding=10, spacing=10)
@@ -100,7 +102,7 @@ class MyGameApp(App):
         if saved_colors:
             self.current_colors = saved_colors
         else:
-            self.current_colors = random.sample(COLOR_BUTTONS, 3)
+            self.current_colors = random.sample(self.color_set, 3)
         buttons_layout = BoxLayout(orientation='horizontal', size_hint=(1, 1), spacing=10)
         for color in self.current_colors:
             color_button = Button(background_normal=color, size_hint=(None, None))
@@ -120,7 +122,6 @@ class MyGameApp(App):
         self.update_button_sizes(self.color_buttons_layout, self.color_buttons_layout.size)
         self.bomb.update_bomb_button_state()
         buttons_layout.bind(size=self.update_bomb_font_size)
-        print(self.color_buttons)
     
     def update_bomb_font_size(self, instance, size):
         self.bomb_info_label.font_size = size[0] / 7
@@ -146,9 +147,7 @@ class MyGameApp(App):
         self.sound_manager.play_sound('click_button')
         if self.is_moving or self.is_animation_running:
             return
-        if self.selected_button and self.selected_button.background_normal in COLOR_BUTTONS:
-
-
+        if self.selected_button and self.selected_button.background_normal in self.color_set:
             if self.grid_state[button.row][button.col] == 0:
                 start = (self.selected_button.row, self.selected_button.col)
                 end = (button.row, button.col)
@@ -165,7 +164,7 @@ class MyGameApp(App):
                 self.selected_button.background_color = [1, 1, 1, 1]
                 self.selected_button = None
                 self.game_logic.cleanup_free_spaces()
-        if button.background_normal in COLOR_BUTTONS:
+        if button.background_normal in self.color_set:
             if self.selected_button:
                 self.selected_button.background_color = [1, 1, 1, 1]
             self.selected_button = button
@@ -195,7 +194,8 @@ class MyGameApp(App):
     def show_high_scores_popup(self, instance):
         score_text = self.game_logic.get_high_scores_text()
         content_layout = self.create_popup_layout(score_text)
-        popup = Popup(title='High Scores', content=content_layout, size_hint=(0.5, 0.5), background_color=(0, 0, 0, 0))
+        popup = Popup(title='High Scores', content=content_layout, size_hint=(1, 1), background_color=(0, 0, 0, 0))
+        popup.bind(on_touch_down=lambda *args: popup.dismiss())
         popup.open()
 
     def check_score_for_bomb(self, count):
@@ -211,15 +211,17 @@ class MyGameApp(App):
         content_layout.add_widget(five_best_label)
         mute_button = self.create_mute_button()
         bomb_button = self.create_bomb_button()
+        easy_mode_button = self.create_easy_mode_button()
         content_layout.add_widget(mute_button)
-        content_layout.add_widget(bomb_button)     
+        content_layout.add_widget(bomb_button) 
+        content_layout.add_widget(easy_mode_button)    
         return content_layout
 
     def create_five_best_score(self, score_text):
-        return Label(text=score_text, font_size=self.score_label.width / 6)
+        return Label(text=score_text, font_size=self.score_label.width / 3)
 
     def create_mute_button(self):   
-        mute_button = Button(size_hint=(1, 0.2), background_color=(1, 1.5, 2, 1))
+        mute_button = Button(size_hint=(1, 0.15), background_color=(1, 1.5, 2, 1), font_size=f"{self.score_label.width / 5}")
         mute_button.text = "Unmute" if self.sound_manager.is_muted else "Mute"
         mute_button.bind(on_press=self.toggle_mute)
         return mute_button
@@ -233,8 +235,9 @@ class MyGameApp(App):
     def create_bomb_button(self):
         bomb_button = Button(
             text="Bomb On" if self.bomb_disabled else "Bomb Off",
-            size_hint=(1, 0.2),
-             background_color=(1, 1.5, 2, 1)
+            size_hint=(1, 0.15),
+             background_color=(1, 1.5, 2, 1), 
+             font_size=f"{self.score_label.width / 5}"
         )
         bomb_button.bind(on_press=self.toggle_bomb)
         return bomb_button
@@ -245,12 +248,29 @@ class MyGameApp(App):
         self.bomb.update_bomb_button_state()
         self.update_bomb_info_label()
 
+    def create_easy_mode_button(self):
+        easy_mode_button = Button(
+            text="Normal Mode" if self.easy_mode else "Easy Mode",
+            size_hint=(1, 0.15),
+            background_color=(1, 1.5, 2, 1),
+            font_size=f"{self.score_label.width / 5}"
+        )
+        easy_mode_button.bind(on_press=self.toggle_easy_mode)
+        return easy_mode_button
+
+    def toggle_easy_mode(self, instance):
+        self.easy_mode = not self.easy_mode
+        instance.text = "Normal Mode" if self.easy_mode else "Easy Mode"
+        self.color_set = EASY_COLOR_BUTTONS if self.easy_mode else COLOR_BUTTONS
+        self.update_color_buttons()
+        self.svld.reset_game(instance)
+
     def build(self):
         # aspect_ratio = 16 / 9
         # width = Window.width
         # Window.size = (width, int(width * aspect_ratio))
         Window.size = (600, 1000)
-        # Window.size = (1200, 2000)
+        # Window.size = (1200, 1000)
         # Window.size = (540, 1200)
         # Window.fullscreen = 'auto'
         parent = RelativeLayout()
@@ -261,7 +281,7 @@ class MyGameApp(App):
         main_layout.add_widget(self.create_the_layouts())
         parent.add_widget(main_layout)     
         self.svld.load_game()
-        self.next_colors = random.sample(COLOR_BUTTONS, 3)
+        self.next_colors = random.sample(self.color_set, 3)
         self.sound_manager.play_sound('background_music')
         self.game_logic.space_info()
         self.game_logic.cleanup_free_spaces() 

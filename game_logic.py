@@ -98,12 +98,12 @@ class GameLogic:
     
     def check_line_of_same_color(self, button): 
         initial_color = button.background_normal
-        if initial_color not in COLOR_BUTTONS and initial_color != CROWN:
+        if initial_color not in self.game.color_set and initial_color != CROWN:
             return []
         all_line_positions = set()
         directions = self.get_direction_vectors()
         for direction, vectors in directions.items():
-            for color_to_check in COLOR_BUTTONS:
+            for color_to_check in self.game.color_set:
                 line = self.check_direction(button, vectors, initial_color, color_to_check)
                 if len(line) >= 5:
                     all_line_positions.update(line)
