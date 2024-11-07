@@ -85,12 +85,16 @@ class GameLogic:
                 high_scores = json.load(f)
         except FileNotFoundError:
             high_scores = []
+
+        return sorted(high_scores, reverse=True)[:5]
+    
+    def update_high_scores_if_needed(self):
+        high_scores = self.get_high_scores()
         if self.game.score > (high_scores[0] if high_scores else 0):
             high_scores.append(self.game.score)
             high_scores = sorted(set(high_scores), reverse=True)[:5]
             with open('high_scores.json', 'w') as f:
                 json.dump(high_scores, f)
-        return high_scores
     
     def check_line_of_same_color(self, button): 
         initial_color = button.background_normal
@@ -107,8 +111,7 @@ class GameLogic:
         if all_line_positions:
             self.clear_button_colors(all_line_positions)
             self.lines_cleared = True
-        self.cleanup_free_spaces()
-        
+        self.cleanup_free_spaces()      
         return list(all_line_positions)
 
     def clear_button_colors(self, buttons):
@@ -154,6 +157,8 @@ class GameLogic:
         print("============================")
 
     def show_high_scores_popup(self, instance):
+        if self.game.is_game_over:
+            self.update_high_scores_if_needed()      
         score_text = self.get_high_scores_text()
         content_layout = self.game.create_popup_layout(score_text)
         popup = Popup(title='High Scores', content=content_layout, size_hint=(0.5, 0.5))
@@ -161,8 +166,7 @@ class GameLogic:
 
     def get_high_scores_text(self):
         high_scores = self.get_high_scores()
-        last_five_scores = high_scores[-5:] if len(high_scores) > 5 else high_scores
-        score_text = "\n".join([f"{i + 1}. {score}" for i, score in enumerate(last_five_scores)])
+        score_text = "\n".join([f"{i + 1}. {score}" for i, score in enumerate(high_scores)])
         return score_text
     
     def highlight_matching_buttons(self, color):
@@ -184,6 +188,7 @@ class GameLogic:
 
     def check_for_game_over(self):
         if all(all(cell != 0 for cell in row) for row in self.game.grid_state):
+            self.update_high_scores_if_needed()
             self.game.svld.save_game()
             self.game.show_game_over_popup()
             self.cleanup_free_spaces()
@@ -234,3 +239,13 @@ class GameLogic:
         if num_colors_to_spawn == 0:
             return None
         return random.sample(available_buttons, num_colors_to_spawn)
+    
+    def bomb_visual_effect(self, affected_buttons):
+        for button in affected_buttons:
+            original_scale = button.size_hint[:]
+            scale_up = Animation(size_hint=(1.2, 1.2), duration=0.1)
+            scale_down = Animation(size_hint=original_scale, duration=0.1)
+            color_change = Animation(background_color=(1, 0, 0, 1), duration=0.1) + Animation(background_color=(0, 0, 0, 0.5), duration=0.2)
+            scale_up.start(button)
+            scale_down.start(button)
+            color_change.start(button)
