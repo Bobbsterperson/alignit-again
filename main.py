@@ -259,12 +259,12 @@ class MyGameApp(App):
         top_layout = self.create_top_layout()
         main_layout.add_widget(top_layout)
         main_layout.add_widget(self.create_the_layouts())
-        parent.add_widget(main_layout)
-        
+        parent.add_widget(main_layout)     
         self.svld.load_game()
         self.next_colors = random.sample(COLOR_BUTTONS, 3)
         self.sound_manager.play_sound('background_music')
         self.game_logic.space_info()
+        self.game_logic.cleanup_free_spaces() 
         return parent
     
 if __name__ == '__main__':
