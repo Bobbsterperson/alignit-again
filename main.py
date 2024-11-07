@@ -97,6 +97,7 @@ class MyGameApp(App):
         self.bomb_button.size = (width, width)
 
     def update_color_buttons(self, saved_colors=None):
+        self.color_set = EASY_COLOR_BUTTONS if self.easy_mode else COLOR_BUTTONS
         self.color_buttons_layout.clear_widgets()
         self.color_buttons = []
         if saved_colors:
@@ -142,6 +143,7 @@ class MyGameApp(App):
         return grid_layout
     
     def on_button_click(self, button):
+        print(self.easy_mode)
         self.bomb.update_bomb_button_state()
         self.game_logic.cleanup_free_spaces()
         self.sound_manager.play_sound('click_button')
