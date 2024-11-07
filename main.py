@@ -212,10 +212,8 @@ class MyGameApp(App):
         five_best_label = self.create_five_best_score(score_text)
         content_layout.add_widget(five_best_label)
         mute_button = self.create_mute_button()
-        bomb_button = self.create_bomb_button()
         easy_mode_button = self.create_easy_mode_button()
         content_layout.add_widget(mute_button)
-        content_layout.add_widget(bomb_button) 
         content_layout.add_widget(easy_mode_button)    
         return content_layout
 
@@ -252,18 +250,18 @@ class MyGameApp(App):
 
     def create_easy_mode_button(self):
         easy_mode_button = Button(
-            text="Classic Mode" if self.easy_mode else "Easy Mode",
+            text="Classic Mode" if self.easy_mode else "Bomber Mode",
             size_hint=(1, 0.15),
             background_color=(1, 1.5, 2, 1),
             font_size=f"{self.score_label.width / 5}"
         )
         easy_mode_button.bind(on_press=self.toggle_easy_mode)
-        # easy_mode_button.bind(on_press=self.toggle_bomb)    # maybe create a bomber mode
+        easy_mode_button.bind(on_press=self.toggle_bomb)
         return easy_mode_button
 
     def toggle_easy_mode(self, instance):
         self.easy_mode = not self.easy_mode
-        instance.text = "Classic Mode" if self.easy_mode else "Easy Mode"
+        instance.text = "Classic Mode" if self.easy_mode else "Bomber Mode"
         self.color_set = EASY_COLOR_BUTTONS if self.easy_mode else COLOR_BUTTONS
         self.update_color_buttons()
         self.svld.reset_game(instance)
