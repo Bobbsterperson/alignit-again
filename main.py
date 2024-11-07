@@ -180,11 +180,11 @@ class MyGameApp(App):
     def show_game_over_popup(self):
         self.sound_manager.play_sound('gameover')
         content = BoxLayout(orientation='vertical')
-        game_over_label = Label(text=f"Score: {self.score}", font_size=FONT_SIZE_GAME_OVER)
-        restart_button = Button(text="Restart", size_hint=(1, 0.4))
+        game_over_label = Label(text=f"Score: {self.score}", font_size=f"{self.score_label.width / 3}", color=(1, 1, 1, 1))
+        restart_button = Button(text="Restart", size_hint=(1, 0.4), background_color=(0, 0.5, 1, 1), font_size=f"{self.score_label.width / 5}")
         content.add_widget(game_over_label)
         content.add_widget(restart_button)
-        popup = Popup(title="Game Over", content=content, size_hint=(1.1, 1.1))
+        popup = Popup(title="Game Over", content=content, size_hint=(1.1, 1.1), background='icons/background.png')
         restart_button.bind(on_press=lambda *args: (self.svld.reset_game(None), popup.dismiss()))
         popup.open()
 
@@ -195,7 +195,7 @@ class MyGameApp(App):
     def show_high_scores_popup(self, instance):
         score_text = self.game_logic.get_high_scores_text()
         content_layout = self.create_popup_layout(score_text)
-        popup = Popup(title='High Scores', content=content_layout, size_hint=(0.5, 0.5))
+        popup = Popup(title='High Scores', content=content_layout, size_hint=(0.5, 0.5), background_color=(0, 0, 0, 0))
         popup.open()
 
     def check_score_for_bomb(self, count):
@@ -219,7 +219,7 @@ class MyGameApp(App):
         return Label(text=score_text, font_size=self.score_label.width / 6)
 
     def create_mute_button(self):   
-        mute_button = Button(size_hint=(1, 0.2))
+        mute_button = Button(size_hint=(1, 0.2), background_color=(1, 1.5, 2, 1))
         mute_button.text = "Unmute" if self.sound_manager.is_muted else "Mute"
         mute_button.bind(on_press=self.toggle_mute)
         return mute_button
@@ -233,7 +233,8 @@ class MyGameApp(App):
     def create_bomb_button(self):
         bomb_button = Button(
             text="Bomb On" if self.bomb_disabled else "Bomb Off",
-            size_hint=(1, 0.2)
+            size_hint=(1, 0.2),
+             background_color=(1, 1.5, 2, 1)
         )
         bomb_button.bind(on_press=self.toggle_bomb)
         return bomb_button
