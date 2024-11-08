@@ -150,33 +150,51 @@ class MyGameApp(App):
         if self.is_moving or self.is_animation_running:
             return
         if self.selected_button and self.selected_button.background_normal in self.color_set:
-            if self.grid_state[button.row][button.col] == 0:
-                start = (self.selected_button.row, self.selected_button.col)
-                end = (button.row, button.col)
-                path = astar(self.grid_state, start, end)
-                if path:
-                    self.move_path = path
-                    self.movement.move_color_button_step_by_step()
-                    self.selected_button = None
-                    self.game_logic.cleanup_free_spaces()
-                else:
-                    self.sound_manager.play_sound('no_path')
-                    self.game_logic.cleanup_free_spaces()
-            else:
-                self.selected_button.background_color = [1, 1, 1, 1]
-                self.selected_button = None
-                self.game_logic.cleanup_free_spaces()
-        if button.background_normal in self.color_set:
-            if self.selected_button:
-                self.selected_button.background_color = [1, 1, 1, 1]
-            self.selected_button = button
-            self.selected_button.background_color = [1.5, 1.5, 1.5, 1]
-            self.game_logic.cleanup_free_spaces()
+            self.handle_selected_button(button)
+        elif button.background_normal in self.color_set:
+            self.select_button(button)
         else:
-            if self.selected_button:
-                self.selected_button.background_color = [1, 1, 1, 1]
+            self.deselect_button()
+
+    def handle_selected_button(self, button):
+        if self.is_valid_move(button):
+            self.move_button(button)
+        else:
+            self.cancel_selection()
+
+    def is_valid_move(self, button):
+        return self.grid_state[button.row][button.col] == 0
+
+    def move_button(self, button):
+        start = (self.selected_button.row, self.selected_button.col)
+        end = (button.row, button.col)
+        path = astar(self.grid_state, start, end)
+        if path:
+            self.move_path = path
+            self.movement.move_color_button_step_by_step()
             self.selected_button = None
             self.game_logic.cleanup_free_spaces()
+        else:
+            self.sound_manager.play_sound('no_path')
+            self.game_logic.cleanup_free_spaces()
+
+    def cancel_selection(self):
+        self.selected_button.background_color = [1, 1, 1, 1]
+        self.selected_button = None
+        self.game_logic.cleanup_free_spaces()
+
+    def select_button(self, button):
+        if self.selected_button:
+            self.selected_button.background_color = [1, 1, 1, 1]
+        self.selected_button = button
+        self.selected_button.background_color = [1.5, 1.5, 1.5, 1]
+        self.game_logic.cleanup_free_spaces()
+
+    def deselect_button(self):
+        if self.selected_button:
+            self.selected_button.background_color = [1, 1, 1, 1]
+        self.selected_button = None
+        self.game_logic.cleanup_free_spaces()
 
     def show_game_over_popup(self):
         self.sound_manager.play_sound('gameover')
@@ -232,16 +250,6 @@ class MyGameApp(App):
         if not self.sound_manager.is_muted:
             self.sound_manager.play_background_music()
 
-    def create_bomb_button(self):
-        bomb_button = Button(
-            text="Bomb On" if self.bomb_disabled else "Bomb Off",
-            size_hint=(1, 0.15),
-             background_color=(1, 1.5, 2, 1), 
-             font_size=f"{self.score_label.width / 5}"
-        )
-        bomb_button.bind(on_press=self.toggle_bomb)
-        return bomb_button
-
     def toggle_bomb(self, instance):
         self.bomb_disabled = not self.bomb_disabled
         instance.text = "Bomb On" if self.bomb_disabled else "Bomb Off"
@@ -255,11 +263,11 @@ class MyGameApp(App):
             background_color=(1, 1.5, 2, 1),
             font_size=f"{self.score_label.width / 5}"
         )
-        easy_mode_button.bind(on_press=self.toggle_easy_mode)
+        easy_mode_button.bind(on_press=self.toggle_bomber_mode)
         easy_mode_button.bind(on_press=self.toggle_bomb)
         return easy_mode_button
 
-    def toggle_easy_mode(self, instance):
+    def toggle_bomber_mode(self, instance):
         self.easy_mode = not self.easy_mode
         instance.text = "Classic Mode" if self.easy_mode else "Bomber Mode"
         self.color_set = EASY_COLOR_BUTTONS if self.easy_mode else COLOR_BUTTONS
@@ -269,7 +277,7 @@ class MyGameApp(App):
             self.bomb_disabled = True      
         self.update_bomb_button_text()
         self.update_color_buttons()
-        # self.svld.save_game()
+        self.svld.save_game()
         self.svld.reset_game(instance)
 
     def update_bomb_button_text(self):
