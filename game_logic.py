@@ -135,7 +135,7 @@ class GameLogic:
 
     def increase_score_by(self, count):
         self.game.score += count
-        self.game.score_label.text = f'{self.game.score:04d}'
+        self.update_score_label()
         self.game.check_score_for_bomb(count)
         self.game.update_bomb_info_label()
 

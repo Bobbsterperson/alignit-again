@@ -40,18 +40,20 @@ class MyGameApp(App):
         self.easy_mode = False
         self.color_set = COLOR_BUTTONS
 
-    def create_top_layout(self):   
+    def create_top_layout(self):
         top_layout = BoxLayout(orientation='horizontal', size_hint_y=0.1, padding=10, spacing=10)
-        reset_button = Button(background_normal="icons/restart.png", size_hint=(None, None), size=(50, 50))
-        save_exit_button = Button(background_normal='icons/savexit.png', size_hint=(None, None), size=(50, 50))      
-        self.score_label = Label(text='0000', font_size="10sp")
-        score_button = Button(background_normal='icons/score.png', size_hint=(None, None), size=(50, 50))
-        reset_button.bind(on_press=self.svld.reset_game)
-        save_exit_button.bind(on_press=self.svld.save_and_exit)
-        score_button.bind(on_press=self.show_high_scores_popup)
-        top_layout.add_widget(reset_button)
-        top_layout.add_widget(save_exit_button)
+        buttons = [
+            ("icons/restart.png", self.svld.reset_game),
+            ("icons/savexit.png", self.svld.save_and_exit),
+        ]
+        for icon, callback in buttons:
+            button = Button(background_normal=icon, size_hint=(None, None), size=(50, 50))
+            button.bind(on_press=callback)
+            top_layout.add_widget(button)
+        self.score_label = Label(text='Score: 0000', font_size="10sp")
         top_layout.add_widget(self.score_label)
+        score_button = Button(background_normal="icons/score.png", size_hint=(None, None), size=(50, 50))
+        score_button.bind(on_press=self.show_high_scores_popup)
         top_layout.add_widget(score_button)
         top_layout.bind(size=self.update_top_button_sizes)
         top_layout.bind(size=self.update_score_font_size)
@@ -143,7 +145,6 @@ class MyGameApp(App):
         return grid_layout
     
     def on_button_click(self, button):
-        print(self.easy_mode)
         self.bomb.update_bomb_button_state()
         self.game_logic.cleanup_free_spaces()
         self.sound_manager.play_sound('click_button')
@@ -250,12 +251,6 @@ class MyGameApp(App):
         if not self.sound_manager.is_muted:
             self.sound_manager.play_background_music()
 
-    def toggle_bomb(self, instance):
-        self.bomb_disabled = not self.bomb_disabled
-        instance.text = "Bomb On" if self.bomb_disabled else "Bomb Off"
-        self.bomb.update_bomb_button_state()
-        self.update_bomb_info_label()
-
     def create_bomber_mode_button(self):
         easy_mode_button = Button(
             text="Classic Mode" if self.easy_mode else "Bomber Mode",
@@ -263,10 +258,17 @@ class MyGameApp(App):
             background_color=(1, 1.5, 2, 1),
             font_size=f"{self.score_label.width / 5}"
         )
-        easy_mode_button.bind(on_press=self.toggle_bomber_mode)
-        easy_mode_button.bind(on_press=self.toggle_bomb)
+        easy_mode_button.bind(on_press=lambda instance: self.toggle_bomber_mode(instance))
         return easy_mode_button
 
+    def toggle_mode_save(funk):
+        def wrapper(self, instance):
+            self.svld.save_game()
+            funk(self, instance)
+            self.svld.reset_game(instance)
+        return wrapper
+
+    @toggle_mode_save
     def toggle_bomber_mode(self, instance):
         self.easy_mode = not self.easy_mode
         instance.text = "Classic Mode" if self.easy_mode else "Bomber Mode"
@@ -277,9 +279,7 @@ class MyGameApp(App):
             self.bomb_disabled = True      
         self.update_bomb_button_text()
         self.update_color_buttons()
-        self.svld.save_game()
-        self.svld.reset_game(instance)
-
+        
     def update_bomb_button_text(self):
         self.bomb_button.text = "Bomb Off" if not self.bomb_disabled else "Bomb On"
         self.bomb.update_bomb_button_state()
