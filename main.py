@@ -153,6 +153,7 @@ class MyGameApp(App):
             self.handle_selected_button(button)
         elif button.background_normal in self.color_set:
             self.select_button(button)
+            self.game_logic.jiggle_button(button)
         else:
             self.deselect_button()
 
@@ -285,9 +286,9 @@ class MyGameApp(App):
 
     def build(self):
         Window.size = (600, 1000)
-        # Window.fullscreen = 'auto'
         parent = RelativeLayout()
-        parent.add_widget(Image(source=BACKGR, fit_mode='cover'))
+        self.background = Image(source=BACKGR, fit_mode='cover')
+        parent.add_widget(self.background)     
         main_layout = BoxLayout(orientation='vertical')    
         top_layout = self.create_top_layout()
         main_layout.add_widget(top_layout)

@@ -110,6 +110,7 @@ class GameLogic:
                     all_line_positions.update(line)
         self.increase_score_by(len(all_line_positions))
         if all_line_positions:
+            self.jiggle_background(self.game.background)
             self.clear_button_colors(all_line_positions)
             self.lines_cleared = True
         self.cleanup_free_spaces()      
@@ -127,8 +128,8 @@ class GameLogic:
             buttons_to_remove.append(button)
             button.disabled = True
             self.game.is_animation_running = True
-            anim = Animation(background_color=[1, 1, 0, 1], duration=0.2)
-            anim += Animation(background_color=[1, 1, 1, 0.5], duration=0.3)
+            anim = Animation(background_color=[0, 0, 5, 1], duration=0.4)
+            anim += Animation(background_color=[1, 1, 1, 0.5], duration=0.2)
             anim.bind(on_complete=lambda anim, value: remove_all_buttons(anim, value))
             anim.bind(on_complete=self.animation_complete)
             anim.start(button)
@@ -175,10 +176,6 @@ class GameLogic:
         if matching_buttons:
             for button in matching_buttons:
                 self.highlight_new_button(button)
-
-    def highlight_buttons(self, buttons):
-        for button in buttons:
-            button.background_color = [1, 0, 0, 1] 
 
     def assign_color_to_button(self, button, color):
         button.background_normal = color
@@ -243,6 +240,7 @@ class GameLogic:
         return random.sample(available_buttons, num_colors_to_spawn)
     
     def bomb_visual_effect(self, affected_buttons):
+        self.jiggle_background(self.game.background)
         for button in affected_buttons:
             original_scale = button.size_hint[:]
             scale_up = Animation(size_hint=(1.2, 1.2), duration=0.1)
@@ -251,3 +249,15 @@ class GameLogic:
             scale_up.start(button)
             scale_down.start(button)
             color_change.start(button)
+
+    def jiggle_button(self, button):
+        animation = Animation(x=button.x - 10, duration=0.05) + Animation(x=button.x + 10, duration=0.05) + Animation(x=button.x, duration=0.05)
+        animation.start(button)
+
+    def jiggle_background(self, background):
+        animation = Animation(x=background.x - 5, duration=0.05) + \
+                    Animation(x=background.x + 5, duration=0.05) + \
+                    Animation(x=background.x - 5, duration=0.05) + \
+                    Animation(x=background.x + 5, duration=0.05) + \
+                    Animation(x=background.x, duration=0.05)
+        animation.start(background)
