@@ -30,7 +30,7 @@ class GameLoader:
             'bomb_disabled': self.game.bomb_disabled,
             'muted': self.game.sound_manager.is_muted,
             'color_buttons': color_buttons_data,
-            'easy_mode': self.game.easy_mode
+            'bomb_mode': self.game.bomb_mode
         }
         with open('game_save.json', 'w') as f:
             json.dump(game_state, f)
@@ -42,8 +42,8 @@ class GameLoader:
                 self.game.grid_state = game_state['grid_state']
                 self.game.score = game_state['score']
                 self.game.game_logic.update_score_label()
-                self.game.easy_mode = game_state.get('easy_mode', False)
-                high_scores_file = 'easy_high_scores.json' if self.game.easy_mode else 'normal_high_scores.json'
+                self.game.bomb_mode = game_state.get('bomb_mode', False)
+                high_scores_file = 'bomb_high_scores.json' if self.game.bomb_mode else 'normal_high_scores.json'
                 try:
                     with open(high_scores_file, 'r') as high_scores_f:
                         high_scores = json.load(high_scores_f)
@@ -79,11 +79,11 @@ class GameLoader:
             self.game.get_running_app().stop()
 
     def reset_game(self, instance):
-        self.game.color_set = EASY_COLOR_BUTTONS if self.game.easy_mode else COLOR_BUTTONS
+        self.game.color_set = EASY_COLOR_BUTTONS if self.game.bomb_mode else COLOR_BUTTONS
         self.game.sound_manager.play_sound('ui')
         if self.game.is_moving or self.game.is_animation_running:
             return
-        easy_mode = self.game.easy_mode
+        bomb_mode = self.game.bomb_mode
         self.game.score = 0
         self.game.score_label.text = '0000'
         self.game.grid_state = [[0 for _ in range(9)] for _ in range(9)]
@@ -102,13 +102,13 @@ class GameLoader:
         self.game.game_logic.assign_random_colors_to_buttons()
         self.game.game_logic.cleanup_free_spaces()
         self.game.game_logic.space_info()
-        self.game.easy_mode = easy_mode
+        self.game.bomb_mode = bomb_mode
         
 
     def get_high_scores(self):
         self.game.sound_manager.play_sound('ui')
         try:
-            file_name = 'easy_high_scores.json' if self.game.easy_mode else 'normal_high_scores.json'
+            file_name = 'bomb_high_scores.json' if self.game.bomb_mode else 'normal_high_scores.json'
             with open(file_name, 'r') as f:
                 high_scores = json.load(f)
         except FileNotFoundError:

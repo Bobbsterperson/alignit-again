@@ -40,20 +40,18 @@ class MyGameApp(App):
         self.bomb_mode = False
         self.color_set = COLOR_BUTTONS
 
-    def create_top_layout(self):
+    def create_top_layout(self):   
         top_layout = BoxLayout(orientation='horizontal', size_hint_y=0.1, padding=10, spacing=10)
-        buttons = [
-            ("icons/restart.png", self.svld.reset_game),
-            ("icons/savexit.png", self.svld.save_and_exit),
-        ]
-        for icon, callback in buttons:
-            button = Button(background_normal=icon, size_hint=(None, None), size=(50, 50))
-            button.bind(on_press=callback)
-            top_layout.add_widget(button)
-        self.score_label = Label(text='Score: 0000', font_size="10sp")
-        top_layout.add_widget(self.score_label)
-        score_button = Button(background_normal="icons/score.png", size_hint=(None, None), size=(50, 50))
+        reset_button = Button(background_normal="icons/restart.png", size_hint=(None, None), size=(50, 50))
+        save_exit_button = Button(background_normal='icons/savexit.png', size_hint=(None, None), size=(50, 50))      
+        self.score_label = Label(text='0000', font_size="10sp")
+        score_button = Button(background_normal='icons/score.png', size_hint=(None, None), size=(50, 50))
+        reset_button.bind(on_press=self.svld.reset_game)
+        save_exit_button.bind(on_press=self.svld.save_and_exit)
         score_button.bind(on_press=self.show_high_scores_popup)
+        top_layout.add_widget(reset_button)
+        top_layout.add_widget(save_exit_button)
+        top_layout.add_widget(self.score_label)
         top_layout.add_widget(score_button)
         top_layout.bind(size=self.update_top_button_sizes)
         top_layout.bind(size=self.update_score_font_size)
@@ -232,9 +230,9 @@ class MyGameApp(App):
         five_best_label = self.create_five_best_score(score_text)
         content_layout.add_widget(five_best_label)
         mute_button = self.create_mute_button()
-        easy_mode_button = self.create_bomber_mode_button()
+        bomb_mode_button = self.create_bomber_mode_button()
         content_layout.add_widget(mute_button)
-        content_layout.add_widget(easy_mode_button)    
+        content_layout.add_widget(bomb_mode_button)    
         return content_layout
 
     def create_five_best_score(self, score_text):
@@ -253,14 +251,14 @@ class MyGameApp(App):
             self.sound_manager.play_background_music()
 
     def create_bomber_mode_button(self):
-        easy_mode_button = Button(
+        bomb_mode_button = Button(
             text="Classic Mode" if self.bomb_mode else "Bomber Mode",
             size_hint=(1, 0.15),
             background_color=(1, 1.5, 2, 1),
             font_size=f"{self.score_label.width / 5}"
         )
-        easy_mode_button.bind(on_press=lambda instance: self.toggle_bomber_mode(instance))
-        return easy_mode_button
+        bomb_mode_button.bind(on_press=lambda instance: self.toggle_bomber_mode(instance))
+        return bomb_mode_button
 
     def toggle_mode_save(funk):
         def wrapper(self, instance):

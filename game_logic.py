@@ -80,7 +80,7 @@ class GameLogic:
 
     def get_high_scores(self):
         self.game.sound_manager.play_sound('ui')
-        high_scores_file = 'easy_high_scores.json' if self.game.easy_mode else 'normal_high_scores.json'        
+        high_scores_file = 'bomb_high_scores.json' if self.game.bomb_mode else 'normal_high_scores.json'        
         try:
             with open(high_scores_file, 'r') as f:
                 high_scores = json.load(f)
@@ -93,7 +93,7 @@ class GameLogic:
         if self.game.score > (high_scores[0] if high_scores else 0):
             high_scores.append(self.game.score)
             high_scores = sorted(set(high_scores), reverse=True)[:5]
-            high_scores_file = 'easy_high_scores.json' if self.game.easy_mode else 'normal_high_scores.json'           
+            high_scores_file = 'bomb_high_scores.json' if self.game.bomb_mode else 'normal_high_scores.json'           
             with open(high_scores_file, 'w') as f:
                 json.dump(high_scores, f)
     
