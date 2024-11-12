@@ -37,7 +37,7 @@ class MyGameApp(App):
         self.bomb_disabled = True
         self.svld = GameLoader(self)
         self.color_buttons = []
-        self.easy_mode = False
+        self.bomb_mode = False
         self.color_set = COLOR_BUTTONS
 
     def create_top_layout(self):
@@ -99,7 +99,7 @@ class MyGameApp(App):
         self.bomb_button.size = (width, width)
 
     def update_color_buttons(self, saved_colors=None):
-        self.color_set = EASY_COLOR_BUTTONS if self.easy_mode else COLOR_BUTTONS
+        self.color_set = EASY_COLOR_BUTTONS if self.bomb_mode else COLOR_BUTTONS
         self.color_buttons_layout.clear_widgets()
         self.color_buttons = []
         if saved_colors:
@@ -148,6 +148,7 @@ class MyGameApp(App):
         self.bomb.update_bomb_button_state()
         self.game_logic.cleanup_free_spaces()
         self.sound_manager.play_sound('click_button')
+        self.game_logic.check_for_game_over()  # only way for now to avoid game over when a line could be completed without triggering check_for_game_over if all grid is full
         if self.is_moving or self.is_animation_running:
             return
         if self.selected_button and self.selected_button.background_normal in self.color_set:
@@ -253,7 +254,7 @@ class MyGameApp(App):
 
     def create_bomber_mode_button(self):
         easy_mode_button = Button(
-            text="Classic Mode" if self.easy_mode else "Bomber Mode",
+            text="Classic Mode" if self.bomb_mode else "Bomber Mode",
             size_hint=(1, 0.15),
             background_color=(1, 1.5, 2, 1),
             font_size=f"{self.score_label.width / 5}"
@@ -270,10 +271,10 @@ class MyGameApp(App):
 
     @toggle_mode_save
     def toggle_bomber_mode(self, instance):
-        self.easy_mode = not self.easy_mode
-        instance.text = "Classic Mode" if self.easy_mode else "Bomber Mode"
-        self.color_set = EASY_COLOR_BUTTONS if self.easy_mode else COLOR_BUTTONS
-        if self.easy_mode:
+        self.bomb_mode = not self.bomb_mode
+        instance.text = "Classic Mode" if self.bomb_mode else "Bomber Mode"
+        self.color_set = EASY_COLOR_BUTTONS if self.bomb_mode else COLOR_BUTTONS
+        if self.bomb_mode:
             self.bomb_disabled = False
         else:
             self.bomb_disabled = True      

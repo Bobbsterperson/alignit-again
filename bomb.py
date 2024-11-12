@@ -35,3 +35,4 @@ class Bomb:
     def update_bomb_button_state(self):
         self.game.bomb_button.disabled = self.game.bomb_disabled or self.game.bomb_uses <= 0
 
+
