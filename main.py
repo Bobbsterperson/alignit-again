@@ -162,6 +162,7 @@ class MyGameApp(App):
             self.move_button(button)
         else:
             self.cancel_selection()
+            self.select_button(button)
 
     def is_valid_move(self, button):
         return self.grid_state[button.row][button.col] == 0
@@ -286,6 +287,7 @@ class MyGameApp(App):
 
     def build(self):
         Window.size = (600, 1000)
+        # Window.fullscreen = 'auto'
         parent = RelativeLayout()
         self.background = Image(source=BACKGR, fit_mode='cover')
         parent.add_widget(self.background)     
