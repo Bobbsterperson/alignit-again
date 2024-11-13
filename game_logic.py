@@ -185,7 +185,6 @@ class GameLogic:
         self.highlight_new_button(button)
 
     def check_for_game_over(self):
-        # self.check_line_of_same_color()
         if all(all(cell != 0 for cell in row) for row in self.game.grid_state):
             self.update_high_scores_if_needed()
             self.game.svld.save_game()
@@ -230,7 +229,6 @@ class GameLogic:
         for button, color in zip(selected_buttons, self.game.next_colors[:len(selected_buttons)]):
             self.assign_color_to_button(button, color)
             self.handle_line_for_button(button)
-        # self.check_for_game_over()
 
     def select_buttons_for_colors(self):
         available_buttons = self.check_for_free_pos()
@@ -251,7 +249,13 @@ class GameLogic:
             color_change.start(button)
 
     def jiggle_button(self, button):
-        animation = Animation(x=button.x - 10, duration=0.05) + Animation(x=button.x + 10, duration=0.05) + Animation(x=button.x, duration=0.05)
+        if self.game.is_animation_running:
+            return
+        self.game.is_animation_running = True
+        animation = Animation(x=button.x - 10, duration=0.05) + \
+                    Animation(x=button.x + 10, duration=0.05) + \
+                    Animation(x=button.x, duration=0.05)
+        animation.bind(on_complete=self.animation_complete)
         animation.start(button)
 
     def jiggle_background(self, background):

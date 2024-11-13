@@ -163,6 +163,7 @@ class MyGameApp(App):
         else:
             self.cancel_selection()
             self.select_button(button)
+            self.game_logic.jiggle_button(button)
 
     def is_valid_move(self, button):
         return self.grid_state[button.row][button.col] == 0
@@ -179,6 +180,7 @@ class MyGameApp(App):
         else:
             self.sound_manager.play_sound('no_path')
             self.game_logic.cleanup_free_spaces()
+            self.game_logic.jiggle_button(button)
 
     def cancel_selection(self):
         self.selected_button.background_color = [1, 1, 1, 1]
