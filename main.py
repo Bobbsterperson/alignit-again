@@ -19,10 +19,11 @@ from kivy.uix.button import Button
 class MyGameApp(App):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)  
+        self.grid_scale = 9
         self.score = 0
         self.selected_button = None
         self.grid_buttons = []
-        self.grid_state = [[0 for _ in range(9)] for _ in range(9)]
+        self.grid_state = [[0 for _ in range(self.grid_scale)] for _ in range(self.grid_scale)]
         self.is_moving = False
         self.current_colors = []
         self.next_colors = []
@@ -39,6 +40,7 @@ class MyGameApp(App):
         self.color_buttons = []
         self.bomb_mode = False
         self.color_set = COLOR_BUTTONS
+        
 
     def create_top_layout(self):   
         top_layout = BoxLayout(orientation='horizontal', size_hint_y=0.1, padding=10, spacing=10)
@@ -128,11 +130,11 @@ class MyGameApp(App):
         self.bomb_info_label.font_size = size[0] / 7
 
     def create_grid_layout(self):
-        grid_layout = GridLayout(cols=9, rows=9, size_hint=(None, None), spacing=4)
+        grid_layout = GridLayout(cols=self.grid_scale, rows=self.grid_scale, size_hint=(None, None), spacing=4)
         square_size = min(Window.width, Window.height) * 1.0
         grid_layout.size = (square_size, square_size)
-        for row in range(9):
-            for col in range(9):
+        for row in range(self.grid_scale):
+            for col in range(self.grid_scale):
                 button = Button(size_hint=(1, 1))
                 button.background_color = [0, 0, 0, 0.5]
                 button.row = row

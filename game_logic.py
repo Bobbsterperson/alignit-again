@@ -19,8 +19,8 @@ class GameLogic:
             while True:
                 row += dx
                 col += dy
-                if 0 <= row < 9 and 0 <= col < 9:
-                    adjacent_button = self.game.grid_buttons[row * 9 + col]
+                if 0 <= row < self.game.grid_scale and 0 <= col < self.game.grid_scale:
+                    adjacent_button = self.game.grid_buttons[row * self.game.grid_scale + col]
                     adjacent_color = adjacent_button.background_normal
                     if adjacent_color == current_color or adjacent_color == CROWN:
                         line.append(adjacent_button)
@@ -67,10 +67,10 @@ class GameLogic:
         button.disabled = False
 
     def cleanup_free_spaces(self):
-        for row in range(9):
-            for col in range(9):
+        for row in range(self.game.grid_scale):
+            for col in range(self.game.grid_scale):
                 if self.game.grid_state[row][col] == 0:
-                    button = self.game.grid_buttons[row * 9 + col]
+                    button = self.game.grid_buttons[row * self.game.grid_scale + col]
                     if button.background_normal != '' or button.background_color != [0, 0, 0, 0.5]:
                         button.background_normal = ''
                         button.background_color = [0, 0, 0, 0.5]
@@ -203,7 +203,7 @@ class GameLogic:
         self.cleanup_free_spaces()
 
     def create_trail_effect(self, position):
-        button = self.game.grid_buttons[position[0] * 9 + position[1]]
+        button = self.game.grid_buttons[position[0] * self.game.grid_scale + position[1]]
         size_hint_x = button.width / Window.width
         size_hint_y = button.height / Window.height
         trail_button = Button(

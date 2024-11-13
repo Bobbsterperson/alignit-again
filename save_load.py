@@ -86,7 +86,7 @@ class GameLoader:
         bomb_mode = self.game.bomb_mode
         self.game.score = 0
         self.game.score_label.text = '0000'
-        self.game.grid_state = [[0 for _ in range(9)] for _ in range(9)]
+        self.game.grid_state = [[0 for _ in range(self.game.grid_scale)] for _ in range(self.game.grid_scale)]
         if self.game.selected_button:
             self.game.selected_button.background_color = [1, 1, 1, 1]
             self.game.selected_button = None
