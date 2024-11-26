@@ -8,6 +8,7 @@ kivy = "*"
 cython = "*"
 buildozer = "*"
 pytest = "*"
+scalene = "*"
 
 [dev-packages]
 

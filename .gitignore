@@ -13,6 +13,7 @@
 !src/movement.py
 !src/save_load.py
 !src/sound.py
+!buildozer.spec
 
 
 src/*

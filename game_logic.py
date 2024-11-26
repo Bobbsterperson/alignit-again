@@ -58,7 +58,6 @@ class GameLogic:
             anim.bind(on_complete=self.animation_complete)
             anim.start(button)
         self.cleanup_free_spaces()
-        self.space_info()
 
     def remove_button(self, button):
         button.background_normal = ''
@@ -112,7 +111,7 @@ class GameLogic:
         if all_line_positions:
             self.jiggle_background(self.game.background)
             self.clear_button_colors(all_line_positions)
-            self.lines_cleared = True
+            self.game.lines_cleared = True
         self.cleanup_free_spaces()      
         return list(all_line_positions)
 

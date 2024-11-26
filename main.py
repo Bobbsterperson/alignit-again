@@ -15,6 +15,7 @@ from save_load import GameLoader
 from bomb import Bomb
 from kivy.core.window import Window
 from kivy.uix.button import Button
+from kivy.utils import platform
 
 class MyGameApp(App):
     def __init__(self, **kwargs):
@@ -289,9 +290,14 @@ class MyGameApp(App):
         self.bomb_button.text = "Bomb Off" if not self.bomb_disabled else "Bomb On"
         self.bomb.update_bomb_button_state()
 
+    def os_res(self):
+        if platform == "android":
+            Window.fullscreen = 'auto'
+        else:
+            Window.size = (600, 1000)
+
     def build(self):
-        Window.size = (600, 1000)
-        # Window.fullscreen = 'auto'
+        self.os_res()
         parent = RelativeLayout()
         self.background = Image(source=BACKGR, fit_mode='cover')
         parent.add_widget(self.background)     
@@ -303,7 +309,7 @@ class MyGameApp(App):
         self.svld.load_game()
         self.next_colors = random.sample(self.color_set, 3)
         self.sound_manager.play_sound('background_music')
-        self.game_logic.space_info()
+        # self.game_logic.space_info()
         self.game_logic.cleanup_free_spaces() 
         return parent
     

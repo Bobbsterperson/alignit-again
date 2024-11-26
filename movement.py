@@ -49,7 +49,8 @@ class Movement:
     def handle_post_move_updates(self):
         if not self.game.lines_cleared:
             self.game.next_colors = self.game.current_colors
-            self.game.update_color_buttons()
-            self.game.game_logic.assign_random_colors_to_buttons()
+            self.game.update_color_buttons()   
+            self.game.game_logic.assign_random_colors_to_buttons()    
         self.game.lines_cleared = False
-        self.game.game_logic.space_info()
+
+        
