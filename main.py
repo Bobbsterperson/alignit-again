@@ -309,7 +309,6 @@ class MyGameApp(App):
         self.svld.load_game()
         self.next_colors = random.sample(self.color_set, 3)
         self.sound_manager.play_sound('background_music')
-        # self.game_logic.space_info()
         self.game_logic.cleanup_free_spaces() 
         return parent
     

@@ -1,7 +1,7 @@
 *
 
 !.gitignore
-!README.md
+!README.txt
 !src/
 !src/main.py
 !config.json
