@@ -41,6 +41,7 @@ class MyGameApp(App):
         self.color_buttons = []
         self.bomb_mode = False
         self.color_set = COLOR_BUTTONS
+        self.mode_state_file = None
         
 
     def create_top_layout(self):   
@@ -271,9 +272,13 @@ class MyGameApp(App):
         def wrapper(self, instance):
             self.svld.save_game()
             funk(self, instance)
-            self.svld.reset_game(instance)
+            self.mode_state_file = 'game_save_bomber.json' if self.bomb_mode else 'game_save_normal.json'
+            if self.svld.game_state_exists(self.mode_state_file):
+                self.svld.load_game(self.mode_state_file)
+            else:
+                self.svld.reset_game(instance)
         return wrapper
-
+ 
     @toggle_mode_save
     def toggle_bomber_mode(self, instance):
         self.bomb_mode = not self.bomb_mode
@@ -282,7 +287,7 @@ class MyGameApp(App):
         if self.bomb_mode:
             self.bomb_disabled = False
         else:
-            self.bomb_disabled = True      
+            self.bomb_disabled = True
         self.update_bomb_button_text()
         self.update_color_buttons()
         
@@ -306,7 +311,7 @@ class MyGameApp(App):
         main_layout.add_widget(top_layout)
         main_layout.add_widget(self.create_the_layouts())
         parent.add_widget(main_layout)     
-        self.svld.load_game()
+        self.svld.load_game(self.mode_state_file)
         self.next_colors = random.sample(self.color_set, 3)
         self.sound_manager.play_sound('background_music')
         self.game_logic.cleanup_free_spaces() 

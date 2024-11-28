@@ -31,19 +31,24 @@ class GameLoader:
             'muted': self.game.sound_manager.is_muted,
             'color_buttons': color_buttons_data,
             'bomb_mode': self.game.bomb_mode
-        }
-        with open('game_save.json', 'w') as f:
+        }       
+        save_file = 'game_save_bomber.json' if self.game.bomb_mode else 'game_save_normal.json'       
+        with open(save_file, 'w') as f:
             json.dump(game_state, f)
 
-    def load_game(self):
+    def load_game(self, mode_state_file=None):
+        if mode_state_file is None:
+            mode_state_file = self.game.mode_state_file
+        save_file = 'game_save_bomber.json' if self.game.bomb_mode else 'game_save_normal.json'       
         try:
-            with open('game_save.json', 'r') as f:
+            with open(save_file, 'r') as f:
                 game_state = json.load(f)
                 self.game.grid_state = game_state['grid_state']
                 self.game.score = game_state['score']
                 self.game.game_logic.update_score_label()
                 self.game.bomb_mode = game_state.get('bomb_mode', False)
                 high_scores_file = 'bomb_high_scores.json' if self.game.bomb_mode else 'normal_high_scores.json'
+                print(f"Loading game from {self.game.mode_state_file}")
                 try:
                     with open(high_scores_file, 'r') as high_scores_f:
                         high_scores = json.load(high_scores_f)
@@ -52,7 +57,7 @@ class GameLoader:
                     self.game.high_scores = []
                 for button, button_state in zip(self.game.grid_buttons, game_state['button_states']):
                     button.background_normal = button_state['image']
-                    button.background_color = button_state['opacity']
+                    button.background_color = button_state['opacity']            
                 self.game.bomb_uses = game_state.get('bomb_uses', 0)
                 self.game.need = game_state.get('need', 0)
                 self.game.bomb_disabled = game_state.get('bomb_disabled', False)
@@ -69,14 +74,14 @@ class GameLoader:
         except FileNotFoundError:
             Clock.schedule_once(lambda dt: self.game.game_logic.assign_random_colors_to_buttons(), 0)
 
-
-    def save_and_exit(self, instance):
-        if self.game.is_moving or self.game.is_animation_running:
-            return
-        else:
-            self.game.sound_manager.stop_sound('background_music')
-            self.save_game()
-            self.game.get_running_app().stop()
+    def game_state_exists(self, mode_state_file=None):
+        if mode_state_file is None:
+            mode_state_file = self.game.mode_state_file
+        try:
+            with open(mode_state_file, 'r'):
+                return True
+        except FileNotFoundError:
+            return False
 
     def reset_game(self, instance):
         self.game.color_set = EASY_COLOR_BUTTONS if self.game.bomb_mode else COLOR_BUTTONS
@@ -103,7 +108,6 @@ class GameLoader:
         self.game.game_logic.cleanup_free_spaces()
         self.game.game_logic.space_info()
         self.game.bomb_mode = bomb_mode
-        
 
     def get_high_scores(self):
         self.game.sound_manager.play_sound('ui')
@@ -119,3 +123,11 @@ class GameLoader:
             with open(file_name, 'w') as f:
                 json.dump(high_scores, f)
         return high_scores
+    
+    def save_and_exit(self, instance):
+        if self.game.is_moving or self.game.is_animation_running:
+            return
+        else:
+            self.game.sound_manager.stop_sound('background_music')
+            self.save_game()
+            self.game.get_running_app().stop()
