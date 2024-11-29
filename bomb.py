@@ -23,7 +23,7 @@ class Bomb:
                     self.game.selected_button.background_color = [1, 1, 1, 1]
                     self.game.selected_button = None
                     self.game.game_logic.cleanup_free_spaces()
-                    self.game.game_logic.space_info()
+                    # self.game.game_logic.space_info()
                 else:
                     print("No bomb uses left!")
             else:

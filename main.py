@@ -147,6 +147,7 @@ class MyGameApp(App):
         return grid_layout
     
     def on_button_click(self, button):
+        print(self.bomb_mode)
         self.bomb.update_bomb_button_state()
         self.game_logic.cleanup_free_spaces()
         self.sound_manager.play_sound('click_button')
@@ -288,12 +289,7 @@ class MyGameApp(App):
             self.bomb_disabled = False
         else:
             self.bomb_disabled = True
-        self.update_bomb_button_text()
         self.update_color_buttons()
-        
-    def update_bomb_button_text(self):
-        self.bomb_button.text = "Bomb Off" if not self.bomb_disabled else "Bomb On"
-        self.bomb.update_bomb_button_state()
 
     def os_res(self):
         if platform == "android":

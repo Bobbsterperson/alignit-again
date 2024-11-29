@@ -32,23 +32,25 @@ class GameLoader:
             'color_buttons': color_buttons_data,
             'bomb_mode': self.game.bomb_mode
         }       
-        save_file = 'game_save_bomber.json' if self.game.bomb_mode else 'game_save_normal.json'       
+        save_file = 'game_save_bomber.json' if self.game.bomb_mode else 'game_save_normal.json'      
+        print(f"save bomb mode: {self.game.bomb_mode}") 
         with open(save_file, 'w') as f:
             json.dump(game_state, f)
 
-    def load_game(self, mode_state_file=None):
+    def load_game(self, mode_state_file=None):  # bomb mode is False as default in main.py and scince there are two save files it cannot see thats its True in bomb save file so it always defaults to False
+        print(f"load bomb mode: {self.game.bomb_mode}")
         if mode_state_file is None:
             mode_state_file = self.game.mode_state_file
-        save_file = 'game_save_bomber.json' if self.game.bomb_mode else 'game_save_normal.json'       
+        save_file = 'game_save_bomber.json' if self.game.bomb_mode else 'game_save_normal.json' # it choses which file to open based on bomb mode, and bomb mode cannot be set to true before oppening the file
         try:
             with open(save_file, 'r') as f:
                 game_state = json.load(f)
                 self.game.grid_state = game_state['grid_state']
                 self.game.score = game_state['score']
                 self.game.game_logic.update_score_label()
-                self.game.bomb_mode = game_state.get('bomb_mode', False)
+                self.game.bomb_mode = game_state['bomb_mode']
                 high_scores_file = 'bomb_high_scores.json' if self.game.bomb_mode else 'normal_high_scores.json'
-                print(f"Loading game from {self.game.mode_state_file}")
+                # print(f"Loading game from {self.game.mode_state_file}")
                 try:
                     with open(high_scores_file, 'r') as high_scores_f:
                         high_scores = json.load(high_scores_f)
@@ -70,7 +72,7 @@ class GameLoader:
                 self.game.update_bomb_info_label()
                 self.game.bomb.update_bomb_button_state()
                 self.game.check_score_for_bomb(0)
-                self.game.game_logic.space_info()
+                # self.game.game_logic.space_info()
         except FileNotFoundError:
             Clock.schedule_once(lambda dt: self.game.game_logic.assign_random_colors_to_buttons(), 0)
 
@@ -106,7 +108,7 @@ class GameLoader:
         self.game.bomb.update_bomb_button_state()
         self.game.game_logic.assign_random_colors_to_buttons()
         self.game.game_logic.cleanup_free_spaces()
-        self.game.game_logic.space_info()
+        # self.game.game_logic.space_info()
         self.game.bomb_mode = bomb_mode
 
     def get_high_scores(self):
