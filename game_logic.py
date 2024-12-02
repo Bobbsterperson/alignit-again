@@ -79,13 +79,16 @@ class GameLogic:
 
     def get_high_scores(self):
         self.game.sound_manager.play_sound('ui')
-        high_scores_file = 'bomb_high_scores.json' if self.game.bomb_mode else 'normal_high_scores.json'        
+        save_file = 'game_save.json'
+        mode_key = 'bomb_mode' if self.game.bomb_mode else 'normal_mode'
         try:
-            with open(high_scores_file, 'r') as f:
-                high_scores = json.load(f)
+            with open(save_file, 'r') as f:
+                game_state = json.load(f)
         except FileNotFoundError:
-            high_scores = []       
+            game_state = {'normal_mode': {'high_scores': []}, 'bomb_mode': {'high_scores': []}}
+        high_scores = game_state.get(mode_key, {}).get('high_scores', [])
         return sorted(high_scores, reverse=True)[:5]
+
     
     def update_high_scores_if_needed(self):
         high_scores = self.get_high_scores()
