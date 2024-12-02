@@ -147,7 +147,7 @@ class MyGameApp(App):
         return grid_layout
     
     def on_button_click(self, button):
-        # print(self.bomb_mode)
+        print(self.bomb_mode)
         self.bomb.update_bomb_button_state()
         self.game_logic.cleanup_free_spaces()
         self.sound_manager.play_sound('click_button')
@@ -273,9 +273,9 @@ class MyGameApp(App):
         def wrapper(self, instance):
             self.svld.save_game()
             funk(self, instance)
-            self.mode_state_file = 'bomb_mode' if self.bomb_mode else 'normal_mode'
-            if self.svld.game_state_exists():
-                self.svld.load_game()
+            self.mode_state_file = 'game_save_bomber.json' if self.bomb_mode else 'game_save_normal.json'
+            if self.svld.game_state_exists(self.mode_state_file):
+                self.svld.load_game(self.mode_state_file)
             else:
                 self.svld.reset_game(instance)
         return wrapper
@@ -307,7 +307,7 @@ class MyGameApp(App):
         main_layout.add_widget(top_layout)
         main_layout.add_widget(self.create_the_layouts())
         parent.add_widget(main_layout)     
-        self.svld.load_game()
+        self.svld.load_game(self.mode_state_file)
         self.next_colors = random.sample(self.color_set, 3)
         self.sound_manager.play_sound('background_music')
         self.game_logic.cleanup_free_spaces() 
