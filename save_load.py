@@ -15,7 +15,7 @@ class GameLoader:
             self.game.selected_button.background_color = [1, 1, 1, 1]
             self.game.selected_button = None
         color_buttons_data = [btn.background_normal for btn in self.game.color_buttons]
-        game_state = {
+        current_mode_data = {
             'grid_state': self.game.grid_state,
             'button_states': [
                 {
@@ -24,68 +24,66 @@ class GameLoader:
                 } for button in self.game.grid_buttons
             ],
             'score': self.game.score,
-            'high_scores': self.game.svld.get_high_scores(),
+            'high_scores': self.get_high_scores(),
             'bomb_uses': self.game.bomb_uses,
             'need': self.game.need,
             'bomb_disabled': self.game.bomb_disabled,
             'muted': self.game.sound_manager.is_muted,
             'color_buttons': color_buttons_data,
             'bomb_mode': self.game.bomb_mode
-        }       
-        save_file = 'game_save_bomber.json' if self.game.bomb_mode else 'game_save_normal.json'      
-        print(f"save bomb mode: {self.game.bomb_mode}") 
-        with open(save_file, 'w') as f:
-            json.dump(game_state, f)
+        }
+        unified_file = 'game_save.json'
+        try:
+            with open(unified_file, 'r') as f:
+                unified_data = json.load(f)
+        except FileNotFoundError:
+            unified_data = {'bomber': {}, 'normal': {}}
+        mode_key = 'bomber' if self.game.bomb_mode else 'normal'
+        unified_data[mode_key] = current_mode_data
+        with open(unified_file, 'w') as f:
+            json.dump(unified_data, f, indent=4)     
+        print(f"Game saved successfully for mode: {mode_key}")
 
-    def load_game(self, mode_state_file=None):  # bomb mode is False as default in main.py and scince there are two save files it cannot see thats its True in bomb save file so it always defaults to False
-        print(f"load bomb mode: {self.game.bomb_mode}")
-        if mode_state_file is None:
-            mode_state_file = self.game.mode_state_file
-        save_file = 'game_save_bomber.json' if self.game.bomb_mode else 'game_save_normal.json' # it choses which file to open based on bomb mode, and bomb mode cannot be set to true before oppening the file
+    def load_game(self):
+        save_file = 'game_save.json'
         try:
             with open(save_file, 'r') as f:
-                game_state = json.load(f)
-                self.game.grid_state = game_state['grid_state']
-                self.game.score = game_state['score']
-                self.game.game_logic.update_score_label()
-                self.game.bomb_mode = game_state['bomb_mode']
-                high_scores_file = 'bomb_high_scores.json' if self.game.bomb_mode else 'normal_high_scores.json'
-                # print(f"Loading game from {self.game.mode_state_file}")
-                try:
-                    with open(high_scores_file, 'r') as high_scores_f:
-                        high_scores = json.load(high_scores_f)
-                        self.game.high_scores = high_scores
-                except FileNotFoundError:
-                    self.game.high_scores = []
-                for button, button_state in zip(self.game.grid_buttons, game_state['button_states']):
-                    button.background_normal = button_state['image']
-                    button.background_color = button_state['opacity']            
-                self.game.bomb_uses = game_state.get('bomb_uses', 0)
-                self.game.need = game_state.get('need', 0)
-                self.game.bomb_disabled = game_state.get('bomb_disabled', False)
-                self.game.sound_manager.is_muted = game_state.get('muted', False)
-                color_buttons_data = game_state.get('color_buttons', [])
-                if color_buttons_data:
-                    self.game.update_color_buttons(saved_colors=color_buttons_data)
-                else:
-                    self.game.update_color_buttons()
-                self.game.update_bomb_info_label()
-                self.game.bomb.update_bomb_button_state()
-                self.game.check_score_for_bomb(0)
-                # self.game.game_logic.space_info()
-        except FileNotFoundError:
-            Clock.schedule_once(lambda dt: self.game.game_logic.assign_random_colors_to_buttons(), 0)
+                unified_data = json.load(f)
+            mode_key = 'bomber' if self.game.bomb_mode else 'normal'
+            game_state = unified_data.get(mode_key, None)
+            if not game_state:
+                print(f"No saved data for mode: {mode_key}. Starting a new game.")
+                self.reset_game()
+                return
+            self.game.grid_state = game_state['grid_state']
+            self.game.score = game_state['score']
+            self.game.game_logic.update_score_label()
+            self.game.bomb_mode = game_state['bomb_mode']
+            self.game.high_scores = game_state.get('high_scores', [])
 
-    def game_state_exists(self, mode_state_file=None):
-        if mode_state_file is None:
-            mode_state_file = self.game.mode_state_file
-        try:
-            with open(mode_state_file, 'r'):
-                return True
-        except FileNotFoundError:
-            return False
+            for button, button_state in zip(self.game.grid_buttons, game_state['button_states']):
+                button.background_normal = button_state['image']
+                button.background_color = button_state['opacity']
 
-    def reset_game(self, instance):
+            self.game.bomb_uses = game_state.get('bomb_uses', 0)
+            self.game.need = game_state.get('need', 0)
+            self.game.bomb_disabled = game_state.get('bomb_disabled', False)
+            self.game.sound_manager.is_muted = game_state.get('muted', False)
+
+            color_buttons_data = game_state.get('color_buttons', [])
+            if color_buttons_data:
+                self.game.update_color_buttons(saved_colors=color_buttons_data)
+            else:
+                self.game.update_color_buttons()
+            self.game.update_bomb_info_label()
+            self.game.bomb.update_bomb_button_state()
+            self.game.check_score_for_bomb(0)
+            print(f"Game loaded successfully for mode: {mode_key}")
+        except FileNotFoundError:
+            print("Save file not found. Starting a new game.")
+            self.reset_game()
+
+    def reset_game(self):
         self.game.color_set = EASY_COLOR_BUTTONS if self.game.bomb_mode else COLOR_BUTTONS
         self.game.sound_manager.play_sound('ui')
         if self.game.is_moving or self.game.is_animation_running:
@@ -108,22 +106,27 @@ class GameLoader:
         self.game.bomb.update_bomb_button_state()
         self.game.game_logic.assign_random_colors_to_buttons()
         self.game.game_logic.cleanup_free_spaces()
-        # self.game.game_logic.space_info()
         self.game.bomb_mode = bomb_mode
 
     def get_high_scores(self):
         self.game.sound_manager.play_sound('ui')
+        save_file = 'game_save.json'
+        mode_key = 'bomber' if self.game.bomb_mode else 'normal'
         try:
-            file_name = 'bomb_high_scores.json' if self.game.bomb_mode else 'normal_high_scores.json'
-            with open(file_name, 'r') as f:
-                high_scores = json.load(f)
+            with open(save_file, 'r') as f:
+                unified_data = json.load(f)
         except FileNotFoundError:
-            high_scores = []
+            unified_data = {
+                "bomber": {"high_scores": []},
+                "normal": {"high_scores": []}
+            }
+        high_scores = unified_data.get(mode_key, {}).get('high_scores', [])
         if self.game.score > (high_scores[0] if high_scores else 0):
             high_scores.append(self.game.score)
             high_scores = sorted(set(high_scores), reverse=True)[:5]
-            with open(file_name, 'w') as f:
-                json.dump(high_scores, f)
+            unified_data[mode_key]['high_scores'] = high_scores
+            with open(save_file, 'w') as f:
+                json.dump(unified_data, f)
         return high_scores
     
     def save_and_exit(self, instance):

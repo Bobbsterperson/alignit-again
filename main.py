@@ -269,26 +269,19 @@ class MyGameApp(App):
         bomb_mode_button.bind(on_press=lambda instance: self.toggle_bomber_mode(instance))
         return bomb_mode_button
 
-    def toggle_mode_save(funk):
+    def toggle_mode_save(func):
         def wrapper(self, instance):
             self.svld.save_game()
-            funk(self, instance)
-            self.mode_state_file = 'game_save_bomber.json' if self.bomb_mode else 'game_save_normal.json'
-            if self.svld.game_state_exists(self.mode_state_file):
-                self.svld.load_game(self.mode_state_file)
-            else:
-                self.svld.reset_game(instance)
+            func(self, instance)
+            self.svld.load_game()
         return wrapper
  
     @toggle_mode_save
     def toggle_bomber_mode(self, instance):
         self.bomb_mode = not self.bomb_mode
-        instance.text = "Classic Mode" if self.bomb_mode else "Bomber Mode"
+        instance.text = "normal" if self.bomb_mode else "Bomber"
         self.color_set = EASY_COLOR_BUTTONS if self.bomb_mode else COLOR_BUTTONS
-        if self.bomb_mode:
-            self.bomb_disabled = False
-        else:
-            self.bomb_disabled = True
+        self.bomb_disabled = not self.bomb_mode
         self.update_color_buttons()
 
     def os_res(self):
@@ -307,7 +300,7 @@ class MyGameApp(App):
         main_layout.add_widget(top_layout)
         main_layout.add_widget(self.create_the_layouts())
         parent.add_widget(main_layout)     
-        self.svld.load_game(self.mode_state_file)
+        self.svld.load_game()
         self.next_colors = random.sample(self.color_set, 3)
         self.sound_manager.play_sound('background_music')
         self.game_logic.cleanup_free_spaces() 
