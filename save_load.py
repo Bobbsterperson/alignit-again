@@ -50,9 +50,9 @@ class GameLoader:
             with open(save_file, 'r') as f:
                 unified_data = json.load(f)
             mode_key = 'bomber' if self.game.bomb_mode else 'normal'
-            game_state = unified_data.get(mode_key, None)
-            if not game_state:
-                print(f"No saved data for mode: {mode_key}. Starting a new game.")
+            game_state = unified_data.get(mode_key)
+            if not game_state or 'grid_state' not in game_state:
+                print(f"Incomplete or missing saved data for mode: {mode_key}. Starting a new game.")
                 self.reset_game()
                 return
             self.game.grid_state = game_state['grid_state']
@@ -60,21 +60,15 @@ class GameLoader:
             self.game.game_logic.update_score_label()
             self.game.bomb_mode = game_state['bomb_mode']
             self.game.high_scores = game_state.get('high_scores', [])
-
             for button, button_state in zip(self.game.grid_buttons, game_state['button_states']):
                 button.background_normal = button_state['image']
                 button.background_color = button_state['opacity']
-
             self.game.bomb_uses = game_state.get('bomb_uses', 0)
             self.game.need = game_state.get('need', 0)
             self.game.bomb_disabled = game_state.get('bomb_disabled', False)
             self.game.sound_manager.is_muted = game_state.get('muted', False)
-
             color_buttons_data = game_state.get('color_buttons', [])
-            if color_buttons_data:
-                self.game.update_color_buttons(saved_colors=color_buttons_data)
-            else:
-                self.game.update_color_buttons()
+            self.game.update_color_buttons(saved_colors=color_buttons_data or None)
             self.game.update_bomb_info_label()
             self.game.bomb.update_bomb_button_state()
             self.game.check_score_for_bomb(0)
@@ -82,6 +76,7 @@ class GameLoader:
         except FileNotFoundError:
             print("Save file not found. Starting a new game.")
             self.reset_game()
+
 
     def reset_game(self):
         self.game.color_set = EASY_COLOR_BUTTONS if self.game.bomb_mode else COLOR_BUTTONS
