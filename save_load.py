@@ -56,6 +56,7 @@ class GameLoader:
         unified_data = self.load_existing_save_data()
         mode_key = 'bomber' if self.game.bomb_mode else 'normal'
         unified_data[mode_key] = current_mode_data
+        print(self.game.bomb_mode)
         with open(unified_file, 'w') as f:
             json.dump(unified_data, f, indent=4)
 
@@ -63,33 +64,56 @@ class GameLoader:
     def load_game(self):
         save_file = 'game_save.json'
         try:
-            with open(save_file, 'r') as f:
-                unified_data = json.load(f)
+            unified_data = self.load_save_file(save_file)
+            if not unified_data:
+                self.reset_game()
+                return
+            
             mode_key = 'bomber' if self.game.bomb_mode else 'normal'
             game_state = unified_data.get(mode_key)
             if not game_state or 'grid_state' not in game_state:
                 self.reset_game()
                 return
-            self.game.grid_state = game_state['grid_state']
-            self.game.score = game_state['score']
-            self.game.game_logic.update_score_label()
-            self.game.bomb_mode = game_state['bomb_mode']
-            self.game.high_scores = game_state.get('high_scores', [])
-            for button, button_state in zip(self.game.grid_buttons, game_state['button_states']):
-                button.background_normal = button_state['image']
-                button.background_color = button_state['opacity']
-            self.game.bomb_uses = game_state.get('bomb_uses', 0)
-            self.game.need = game_state.get('need', 0)
-            self.game.bomb_disabled = game_state.get('bomb_disabled', False)
-            self.game.sound_manager.music_is_muted = game_state.get('muted', False)
-            self.game.sound_manager.ui_sounds_are_muted = game_state.get('ui_muted', False)
-            color_buttons_data = game_state.get('color_buttons', [])
-            self.game.update_color_buttons(saved_colors=color_buttons_data or None)
-            self.game.update_bomb_info_label()
-            self.game.bomb.update_bomb_button_state()
-            self.game.check_score_for_bomb(0)
+            self.apply_game_state(game_state)
+            self.apply_button_states(game_state)
+            self.apply_sound_settings(game_state)
+            self.update_game_info(game_state)
         except FileNotFoundError:
             self.reset_game()
+
+    def load_save_file(self, file_name):
+        try:
+            with open(file_name, 'r') as f:
+                return json.load(f)
+        except FileNotFoundError:
+            return None
+
+    def apply_game_state(self, game_state):
+        self.game.grid_state = game_state['grid_state']
+        self.game.score = game_state['score']
+        self.game.game_logic.update_score_label()
+        self.game.bomb_mode = game_state['bomb_mode']
+        self.game.high_scores = game_state.get('high_scores', [])
+
+    def apply_button_states(self, game_state):
+        for button, button_state in zip(self.game.grid_buttons, game_state['button_states']):
+            button.background_normal = button_state['image']
+            button.background_color = button_state['opacity']
+
+    def apply_sound_settings(self, game_state):
+        self.game.sound_manager.music_is_muted = game_state.get('muted', False)
+        self.game.sound_manager.ui_sounds_are_muted = game_state.get('ui_muted', False)
+
+    def update_game_info(self, game_state):
+        self.game.bomb_uses = game_state.get('bomb_uses', 0)
+        self.game.need = game_state.get('need', 0)
+        self.game.bomb_disabled = game_state.get('bomb_disabled', False)
+        color_buttons_data = game_state.get('color_buttons', [])
+        self.game.update_color_buttons(saved_colors=color_buttons_data or None)
+        self.game.update_bomb_info_label()
+        self.game.bomb.update_bomb_button_state()
+        self.game.check_score_for_bomb(0)
+
 
 
     def reset_game(self):
