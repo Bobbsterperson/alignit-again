@@ -237,26 +237,39 @@ class MyGameApp(App):
         content_layout = BoxLayout(orientation='vertical', padding=10, spacing=10)
         five_best_label = self.create_five_best_score(score_text)
         content_layout.add_widget(five_best_label)
-        mute_button = self.create_mute_button()
+        mute_buttons_layout = BoxLayout(orientation='horizontal', size_hint_y=None, height=70, spacing=10)
+        mute_music_button = self.create_mute_music_button()
+        mute_UI_button = self.create_mute_UI_button()
+        mute_buttons_layout.add_widget(mute_music_button)
+        mute_buttons_layout.add_widget(mute_UI_button)
+        content_layout.add_widget(mute_buttons_layout)
         bomb_mode_button = self.create_bomber_mode_button()
-        content_layout.add_widget(mute_button)
         content_layout.add_widget(bomb_mode_button)    
         return content_layout
 
     def create_five_best_score(self, score_text):
         return Label(text=score_text, font_size=self.score_label.width / 3)
 
-    def create_mute_button(self):   
-        mute_button = Button(size_hint=(1, 0.15), background_color=(1, 1.5, 2, 1), font_size=f"{self.score_label.width / 5}")
-        mute_button.text = "Unmute" if self.sound_manager.is_muted else "Mute"
-        mute_button.bind(on_press=self.toggle_mute)
+    def create_mute_music_button(self):   
+        mute_button = Button(size_hint=(0.5, 1.5), background_color=(1, 1.5, 2, 1), font_size=f"{self.score_label.width / 5}")
+        mute_button.text = "Unmute music" if self.sound_manager.music_is_muted else "Mute music"
+        mute_button.bind(on_press=self.toggle_mute_music)
+        return mute_button
+        
+    def create_mute_UI_button(self):   
+        mute_button = Button(size_hint=(0.5, 1.5), background_color=(1, 1.5, 2, 1), font_size=f"{self.score_label.width / 5}")
+        mute_button.text = "Unmute UI" if self.sound_manager.ui_sounds_are_muted else "Mute UI"
+        mute_button.bind(on_press=self.toggle_mute_UI)
         return mute_button
 
-    def toggle_mute(self, instance):
-        self.sound_manager.toggle_mute()
-        instance.text = "Unmute" if self.sound_manager.is_muted else "Mute"
-        if not self.sound_manager.is_muted:
-            self.sound_manager.play_background_music()
+    def toggle_mute_music(self, instance):
+        self.sound_manager.toggle_mute_background_music()
+        instance.text = "Unmute music" if self.sound_manager.music_is_muted else "Mute music"
+
+    def toggle_mute_UI(self, instance):
+        self.sound_manager.toggle_mute_ui_sounds()
+        instance.text = "Unmute UI" if self.sound_manager.ui_sounds_are_muted else "Mute UI"
+
 
     def create_bomber_mode_button(self):
         bomb_mode_button = Button(
