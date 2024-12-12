@@ -286,6 +286,10 @@ class MyGameApp(App):
             self.svld.save_game()
             func(self, instance)
             self.svld.load_game()
+            if not self.sound_manager.music_is_muted:
+                self.sound_manager.play_sound('background_music')
+            else:
+                self.sound_manager.stop_sound('background_music')
         return wrapper
  
     @toggle_mode_save
@@ -314,7 +318,10 @@ class MyGameApp(App):
         parent.add_widget(main_layout)     
         self.svld.load_game()
         self.next_colors = random.sample(self.color_set, 3)
-        self.sound_manager.play_sound('background_music')
+        if not self.sound_manager.music_is_muted:
+            self.sound_manager.play_sound('background_music')
+        else:
+            self.sound_manager.stop_sound('background_music')
         self.game_logic.cleanup_free_spaces() 
         return parent
     
