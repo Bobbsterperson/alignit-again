@@ -50,7 +50,7 @@ class MyGameApp(App):
         save_exit_button = Button(background_normal='icons/savexit.png', size_hint=(None, None), size=(50, 50))      
         self.score_label = Label(text='0000', font_size="10sp")
         score_button = Button(background_normal='icons/score.png', size_hint=(None, None), size=(50, 50))
-        reset_button.bind(on_press=self.svld.reset_game)
+        reset_button.bind(on_press=lambda instance: self.svld.reset_game())
         save_exit_button.bind(on_press=self.svld.save_and_exit)
         score_button.bind(on_press=self.show_high_scores_popup)
         top_layout.add_widget(reset_button)
@@ -147,7 +147,6 @@ class MyGameApp(App):
         return grid_layout
     
     def on_button_click(self, button):
-        print(self.bomb_mode)
         self.bomb.update_bomb_button_state()
         self.game_logic.cleanup_free_spaces()
         self.sound_manager.play_sound('click_button')

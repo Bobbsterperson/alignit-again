@@ -1,7 +1,6 @@
 import json
 import random
 from constants import COLOR_BUTTONS, EASY_COLOR_BUTTONS
-from kivy.clock import Clock
 
 class GameLoader:
     def __init__(self, game):
@@ -9,13 +8,23 @@ class GameLoader:
 
     def save_game(self):
         self.game.sound_manager.play_sound('ui')
-        if self.game.is_moving or self.game.is_animation_running:
+        if self.is_busy():
             return
+        self.deselect_button()
+        current_mode_data = self.gather_game_data()
+        self.save_to_file(current_mode_data)
+
+    def is_busy(self):
+        return self.game.is_moving or self.game.is_animation_running
+
+    def deselect_button(self):
         if self.game.selected_button:
             self.game.selected_button.background_color = [1, 1, 1, 1]
             self.game.selected_button = None
+
+    def gather_game_data(self):
         color_buttons_data = [btn.background_normal for btn in self.game.color_buttons]
-        current_mode_data = {
+        return {
             'grid_state': self.game.grid_state,
             'button_states': [
                 {
@@ -32,17 +41,23 @@ class GameLoader:
             'color_buttons': color_buttons_data,
             'bomb_mode': self.game.bomb_mode
         }
+
+    def load_existing_save_data(self):
         unified_file = 'game_save.json'
         try:
             with open(unified_file, 'r') as f:
-                unified_data = json.load(f)
+                return json.load(f)
         except FileNotFoundError:
-            unified_data = {'bomber': {}, 'normal': {}}
+            return {'bomber': {}, 'normal': {}}
+
+    def save_to_file(self, current_mode_data):
+        unified_file = 'game_save.json'
+        unified_data = self.load_existing_save_data()
         mode_key = 'bomber' if self.game.bomb_mode else 'normal'
         unified_data[mode_key] = current_mode_data
         with open(unified_file, 'w') as f:
-            json.dump(unified_data, f, indent=4)     
-        print(f"Game saved successfully for mode: {mode_key}")
+            json.dump(unified_data, f, indent=4)
+
 
     def load_game(self):
         save_file = 'game_save.json'
@@ -52,7 +67,6 @@ class GameLoader:
             mode_key = 'bomber' if self.game.bomb_mode else 'normal'
             game_state = unified_data.get(mode_key)
             if not game_state or 'grid_state' not in game_state:
-                print(f"Incomplete or missing saved data for mode: {mode_key}. Starting a new game.")
                 self.reset_game()
                 return
             self.game.grid_state = game_state['grid_state']
@@ -72,11 +86,9 @@ class GameLoader:
             self.game.update_bomb_info_label()
             self.game.bomb.update_bomb_button_state()
             self.game.check_score_for_bomb(0)
-            print(f"Game loaded successfully for mode: {mode_key}")
         except FileNotFoundError:
-            print("Save file not found. Starting a new game.")
-            self.reset_game()
 
+            self.reset_game()
 
     def reset_game(self):
         self.game.color_set = EASY_COLOR_BUTTONS if self.game.bomb_mode else COLOR_BUTTONS
