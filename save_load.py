@@ -37,7 +37,8 @@ class GameLoader:
             'bomb_uses': self.game.bomb_uses,
             'need': self.game.need,
             'bomb_disabled': self.game.bomb_disabled,
-            'muted': self.game.sound_manager.is_muted,
+            'muted': self.game.sound_manager.music_is_muted,
+            'ui_muted': self.game.sound_manager.ui_sounds_are_muted,
             'color_buttons': color_buttons_data,
             'bomb_mode': self.game.bomb_mode
         }
@@ -80,15 +81,16 @@ class GameLoader:
             self.game.bomb_uses = game_state.get('bomb_uses', 0)
             self.game.need = game_state.get('need', 0)
             self.game.bomb_disabled = game_state.get('bomb_disabled', False)
-            self.game.sound_manager.is_muted = game_state.get('muted', False)
+            self.game.sound_manager.music_is_muted = game_state.get('muted', False)
+            self.game.sound_manager.ui_sounds_are_muted = game_state.get('ui_muted', False)
             color_buttons_data = game_state.get('color_buttons', [])
             self.game.update_color_buttons(saved_colors=color_buttons_data or None)
             self.game.update_bomb_info_label()
             self.game.bomb.update_bomb_button_state()
             self.game.check_score_for_bomb(0)
         except FileNotFoundError:
-
             self.reset_game()
+
 
     def reset_game(self):
         self.game.color_set = EASY_COLOR_BUTTONS if self.game.bomb_mode else COLOR_BUTTONS
