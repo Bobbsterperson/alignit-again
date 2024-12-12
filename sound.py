@@ -50,11 +50,6 @@ class SoundManager:
         if sound:
             sound.stop()
 
-    def stop_all_sounds(self):
-        for sound in self.sounds.values():
-            if sound:
-                sound.stop()
-
     def toggle_mute_background_music(self):
         self.music_is_muted = not self.music_is_muted
         if self.music_is_muted:
