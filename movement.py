@@ -38,7 +38,7 @@ class Movement:
         self.game.grid_state[colored_button.row][colored_button.col] = 0
         colored_button.background_normal = ''
         colored_button.background_down = ''
-        colored_button.background_color = [0, 0, 0, 0.5]
+        colored_button.background_color = [1, 1, 1, 0.3]
 
     def finalize_move(self, final_pos):
         self.game.is_moving = False

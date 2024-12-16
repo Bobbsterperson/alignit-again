@@ -138,7 +138,7 @@ class MyGameApp(App):
         for row in range(self.grid_scale):
             for col in range(self.grid_scale):
                 button = Button(size_hint=(1, 1))
-                button.background_color = [0, 0, 0, 0.5]
+                button.background_color = [1, 1, 1, 0.3]
                 button.row = row
                 button.col = col
                 grid_layout.add_widget(button)
@@ -150,7 +150,7 @@ class MyGameApp(App):
         self.bomb.update_bomb_button_state()
         self.game_logic.cleanup_free_spaces()
         self.sound_manager.play_sound('click_button')
-        self.game_logic.check_for_game_over()  # only way for now to avoid game over when a line could be completed without triggering check_for_game_over if all grid is full
+  # only way for now to avoid game over when a line could be completed without triggering check_for_game_over if all grid is full
         if self.is_moving or self.is_animation_running:
             return
         if self.selected_button and self.selected_button.background_normal in self.color_set:

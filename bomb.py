@@ -18,7 +18,7 @@ class Bomb:
                     self.game.game_logic.bomb_visual_effect(affected_buttons)
                     for button in affected_buttons:
                         button.background_normal = ''
-                        button.background_color = [0, 0, 0, 0.5]
+                        button.background_color = [1, 1, 1, 0.3]
                         self.game.grid_state[button.row][button.col] = 0
                     self.game.selected_button.background_color = [1, 1, 1, 1]
                     self.game.selected_button = None

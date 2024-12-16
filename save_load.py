@@ -94,6 +94,7 @@ class GameLoader:
         self.game.game_logic.update_score_label()
         self.game.bomb_mode = game_state['bomb_mode']
         self.game.high_scores = game_state.get('high_scores', [])
+        print(f"applied bomb_mode: {self.game.bomb_mode}")
 
     def apply_button_states(self, game_state):
         for button, button_state in zip(self.game.grid_buttons, game_state['button_states']):
@@ -114,9 +115,7 @@ class GameLoader:
         self.game.bomb.update_bomb_button_state()
         self.game.check_score_for_bomb(0)
 
-
-
-    def reset_game(self):
+    def reset_game(self, *args):
         self.game.color_set = EASY_COLOR_BUTTONS if self.game.bomb_mode else COLOR_BUTTONS
         self.game.sound_manager.play_sound('ui')
         if self.game.is_moving or self.game.is_animation_running:
@@ -130,7 +129,7 @@ class GameLoader:
             self.game.selected_button = None
         for button in self.game.grid_buttons:
             button.background_normal = ''
-            button.background_color = [0, 0, 0, 0.5]
+            button.background_color = [1, 1, 1, 0.3]
         self.game.color_buttons_layout.clear_widgets()
         self.game.update_color_buttons()
         self.game.next_colors = random.sample(self.game.color_set, 3)

@@ -61,7 +61,7 @@ class GameLogic:
 
     def remove_button(self, button):
         button.background_normal = ''
-        button.background_color = [0, 0, 0, 0.5]
+        button.background_color = [1, 1, 1, 0.5]
         self.game.grid_state[button.row][button.col] = 0
         button.disabled = False
 
@@ -70,9 +70,9 @@ class GameLogic:
             for col in range(self.game.grid_scale):
                 if self.game.grid_state[row][col] == 0:
                     button = self.game.grid_buttons[row * self.game.grid_scale + col]
-                    if button.background_normal != '' or button.background_color != [0, 0, 0, 0.5]:
+                    if button.background_normal != '' or button.background_color != [1, 1, 1, 0.3]:
                         button.background_normal = ''
-                        button.background_color = [0, 0, 0, 0.5]
+                        button.background_color = [1, 1, 1, 0.3]
 
     def update_score_label(self):
         self.game.score_label.text = f'{self.game.score:04d}'
@@ -131,7 +131,7 @@ class GameLogic:
             button.disabled = True
             self.game.is_animation_running = True
             anim = Animation(background_color=[0, 0, 5, 1], duration=0.4)
-            anim += Animation(background_color=[1, 1, 1, 0.5], duration=0.2)
+            anim += Animation(background_color=[1, 1, 1, 0.3], duration=0.2)
             anim.bind(on_complete=lambda anim, value: remove_all_buttons(anim, value))
             anim.bind(on_complete=self.animation_complete)
             anim.start(button)
@@ -150,7 +150,7 @@ class GameLogic:
 
     def clear_button_color(self, button):
         button.background_normal = ''
-        button.background_color = [0, 0, 0, 0.5]
+        button.background_color = [1, 1, 1, 0.3]
         self.game.grid_state[button.row][button.col] = 0
 
     def space_info(self):
@@ -231,6 +231,8 @@ class GameLogic:
         for button, color in zip(selected_buttons, self.game.next_colors[:len(selected_buttons)]):
             self.assign_color_to_button(button, color)
             self.handle_line_for_button(button)
+            self.check_line_of_same_color(button) # moved the ckeck here to make sure it checks before game over is triggered
+            self.check_for_game_over() # game over is triggered here if no space avaliable
 
     def select_buttons_for_colors(self):
         available_buttons = self.check_for_free_pos()
