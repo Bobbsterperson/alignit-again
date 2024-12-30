@@ -41,7 +41,7 @@ class MyGameApp(App):
         self.color_buttons = []
         self.bomb_mode = False
         self.color_set = COLOR_BUTTONS
-        self.mode_state_file = None
+        # self.mode_state_file = None
         
 
     def create_top_layout(self):   
@@ -150,7 +150,6 @@ class MyGameApp(App):
         self.bomb.update_bomb_button_state()
         self.game_logic.cleanup_free_spaces()
         self.sound_manager.play_sound('click_button')
-  # only way for now to avoid game over when a line could be completed without triggering check_for_game_over if all grid is full
         if self.is_moving or self.is_animation_running:
             return
         if self.selected_button and self.selected_button.background_normal in self.color_set:
@@ -234,10 +233,12 @@ class MyGameApp(App):
             self.bomb.update_bomb_button_state()
 
     def create_popup_layout(self, score_text):
-        content_layout = BoxLayout(orientation='vertical', padding=10, spacing=10)
+        content_layout = BoxLayout(orientation='vertical', padding=1, spacing=10)
         five_best_label = self.create_five_best_score(score_text)
         content_layout.add_widget(five_best_label)
-        mute_buttons_layout = BoxLayout(orientation='horizontal', size_hint_y=None, height=70, spacing=10)
+        mute_buttons_layout = BoxLayout(orientation='horizontal', size_hint_y=None, height=100, spacing=10)
+        show_instructions_button = self.create_show_instructions_button()
+        content_layout.add_widget(show_instructions_button)
         mute_music_button = self.create_mute_music_button()
         mute_UI_button = self.create_mute_UI_button()
         mute_buttons_layout.add_widget(mute_music_button)
@@ -246,18 +247,39 @@ class MyGameApp(App):
         bomb_mode_button = self.create_bomber_mode_button()
         content_layout.add_widget(bomb_mode_button)    
         return content_layout
+    
+    def create_show_instructions_button(self):
+        show_instructions_button = Button(size_hint=(1.0, 0.2), background_color=(1, 1.5, 2, 1), font_size=f"{self.score_label.width / 5}")
+        show_instructions_button.text = "Instructions"
+        show_instructions_button.bind(on_release=self.show_instructions_popup)
+        return show_instructions_button
+    
+    def show_instructions_popup(self, instance):
+        content_layout = BoxLayout(orientation='vertical', padding=5, spacing=5)
+        image_path = 'icons/instructions.jpg'
+        presplash_image = Image(source=image_path, allow_stretch=True, keep_ratio=True)
+        content_layout.add_widget(presplash_image)
+        popup = Popup(
+            title="",
+            content=content_layout,
+            size_hint=(1, 1),
+            auto_dismiss=False,
+            background_color=(0, 0, 0, 0)
+        )
+        popup.bind(on_touch_down=lambda *args: popup.dismiss())
+        popup.open()
 
     def create_five_best_score(self, score_text):
         return Label(text=score_text, font_size=self.score_label.width / 3)
 
     def create_mute_music_button(self):   
-        mute_button = Button(size_hint=(0.5, 1.5), background_color=(1, 1.5, 2, 1), font_size=f"{self.score_label.width / 5}")
+        mute_button = Button(size_hint=(0.5, 1.0), background_color=(1, 1.5, 2, 1), font_size=f"{self.score_label.width / 5}")
         mute_button.text = "Unmute music" if self.sound_manager.music_is_muted else "Mute music"
         mute_button.bind(on_press=self.toggle_mute_music)
         return mute_button
         
     def create_mute_UI_button(self):   
-        mute_button = Button(size_hint=(0.5, 1.5), background_color=(1, 1.5, 2, 1), font_size=f"{self.score_label.width / 5}")
+        mute_button = Button(size_hint=(0.5, 1.0), background_color=(1, 1.5, 2, 1), font_size=f"{self.score_label.width / 5}")
         mute_button.text = "Unmute UI" if self.sound_manager.ui_sounds_are_muted else "Mute UI"
         mute_button.bind(on_press=self.toggle_mute_UI)
         return mute_button
@@ -274,7 +296,7 @@ class MyGameApp(App):
     def create_bomber_mode_button(self):
         bomb_mode_button = Button(
             text="Classic Mode" if self.bomb_mode else "Bomber Mode",
-            size_hint=(1, 0.15),
+            size_hint=(1, 0.2),
             background_color=(1, 1.5, 2, 1),
             font_size=f"{self.score_label.width / 5}"
         )
